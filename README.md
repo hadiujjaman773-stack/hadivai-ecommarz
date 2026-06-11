@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mosafa Mart - Full Stack Next.js E-commerce
 
-## Getting Started
+Mosafa Mart এর ডিজাইন অনুযায়ী তৈরি full-stack e-commerce অ্যাপ।
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS v4**
+- **Prisma** + **MongoDB**
+- **Swiper** (Hero slider)
+
+## Pages (মূল HTML ফোল্ডার ম্যাপিং)
+
+| ফোল্ডার | পেজ | Route |
+|---------|-----|-------|
+| `mosafamart.home-page` | হোম | `/` |
+| `mosafamart.cotagory-page` | ক্যাটাগরি | `/category/[slug]` |
+| `mosafamart.product-page` | পণ্য বিবরণ | `/product/[slug]` |
+| `mosafamart.checkout-page` | চেকআউট | `/checkout` |
+
+## Setup
 
 ```bash
+cd fullstack-nextjs
+npm install
+cp .env.example .env
+# .env এ MongoDB DATABASE_URL সেট করুন
+npm run db:push
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+MongoDB ছাড়াও অ্যাপ চলবে — static seed data fallback আছে।
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Design
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Primary color: `#fc8934` (orange)
+- Font: Baloo Da 2 (Bengali)
+- WhatsApp & Call floating buttons
+- Same navigation categories as original site
 
-## Learn More
+## API Routes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `GET /api/products` — পণ্য তালিকা
+- `GET /api/categories` — ক্যাটাগরি তালিকা
+- `POST /api/orders` — অর্ডার জমা
