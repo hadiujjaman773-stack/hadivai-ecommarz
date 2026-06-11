@@ -64,7 +64,7 @@ async function main() {
       data: {
         title: banner.title,
         titleBn: banner.titleBn,
-        subtitle: banner.subtitle,
+        subtitle: banner.heading,
         subtitleBn: banner.subtitleBn,
         image: banner.image,
         link: banner.link,

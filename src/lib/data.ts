@@ -53,7 +53,7 @@ function staticBanners(): BannerItem[] {
     titleBn: b.titleBn,
     heading: b.heading,
     eyebrow: b.eyebrow,
-    subtitle: b.subtitle,
+    subtitle: b.heading,
     subtitleBn: b.subtitleBn,
     image: b.image,
     link: b.link,
