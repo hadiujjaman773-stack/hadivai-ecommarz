@@ -13,7 +13,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "mosafamart.com",
       },
+      {
+        protocol: "https",
+        hostname: "imagedelivery.net",
+      },
     ],
+    // Local /uploads/* paths work without remotePatterns
   },
 };
 

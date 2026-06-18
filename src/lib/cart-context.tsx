@@ -15,8 +15,12 @@ interface CartContextValue {
   isOpen: boolean;
   hydrated: boolean;
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  removeItem: (productId: string, size?: string) => void;
-  updateQuantity: (productId: string, quantity: number, size?: string) => void;
+  removeItem: (productId: string, variantId?: string) => void;
+  updateQuantity: (
+    productId: string,
+    quantity: number,
+    variantId?: string
+  ) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -27,8 +31,8 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "mosafa-cart";
 
-function itemKey(productId: string, size?: string) {
-  return `${productId}::${size ?? ""}`;
+function itemKey(productId: string, variantId?: string) {
+  return `${productId}::${variantId ?? ""}`;
 }
 
 function readStoredCart(): CartItem[] {
@@ -52,8 +56,13 @@ type CartAction =
   | { type: "OPEN" }
   | { type: "CLOSE" }
   | { type: "ADD"; item: Omit<CartItem, "quantity">; quantity: number }
-  | { type: "REMOVE"; productId: string; size?: string }
-  | { type: "UPDATE_QTY"; productId: string; size?: string; quantity: number }
+  | { type: "REMOVE"; productId: string; variantId?: string }
+  | {
+      type: "UPDATE_QTY";
+      productId: string;
+      variantId?: string;
+      quantity: number;
+    }
   | { type: "CLEAR" };
 
 function addToItems(
@@ -61,12 +70,17 @@ function addToItems(
   item: Omit<CartItem, "quantity">,
   quantity: number
 ): CartItem[] {
-  const normalized = { ...item, size: item.size || undefined };
-  const key = itemKey(normalized.productId, normalized.size);
-  const existing = items.find((i) => itemKey(i.productId, i.size) === key);
+  const normalized = {
+    ...item,
+    variantId: item.variantId || undefined,
+  };
+  const key = itemKey(normalized.productId, normalized.variantId);
+  const existing = items.find(
+    (i) => itemKey(i.productId, i.variantId) === key
+  );
   if (existing) {
     return items.map((i) =>
-      itemKey(i.productId, i.size) === key
+      itemKey(i.productId, i.variantId) === key
         ? { ...i, quantity: i.quantity + quantity }
         : i
     );
@@ -93,28 +107,28 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         hydrated: state.hydrated,
       };
     case "REMOVE": {
-      const key = itemKey(action.productId, action.size);
+      const key = itemKey(action.productId, action.variantId);
       return {
         ...state,
         items: state.items.filter(
-          (i) => itemKey(i.productId, i.size) !== key
+          (i) => itemKey(i.productId, i.variantId) !== key
         ),
       };
     }
     case "UPDATE_QTY": {
-      const key = itemKey(action.productId, action.size);
+      const key = itemKey(action.productId, action.variantId);
       if (action.quantity <= 0) {
         return {
           ...state,
           items: state.items.filter(
-            (i) => itemKey(i.productId, i.size) !== key
+            (i) => itemKey(i.productId, i.variantId) !== key
           ),
         };
       }
       return {
         ...state,
         items: state.items.map((i) =>
-          itemKey(i.productId, i.size) === key
+          itemKey(i.productId, i.variantId) === key
             ? { ...i, quantity: action.quantity }
             : i
         ),
@@ -167,13 +181,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const removeItem = useCallback((productId: string, size?: string) => {
-    dispatch({ type: "REMOVE", productId, size });
+  const removeItem = useCallback((productId: string, variantId?: string) => {
+    dispatch({ type: "REMOVE", productId, variantId });
   }, []);
 
   const updateQuantity = useCallback(
-    (productId: string, quantity: number, size?: string) => {
-      dispatch({ type: "UPDATE_QTY", productId, size, quantity });
+    (productId: string, quantity: number, variantId?: string) => {
+      dispatch({ type: "UPDATE_QTY", productId, variantId, quantity });
     },
     []
   );

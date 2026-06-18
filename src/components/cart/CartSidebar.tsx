@@ -6,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, X, Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatPriceWithUnit } from "@/lib/format";
+import { getProductPath } from "@/lib/product-url";
 import { PRODUCTS } from "@/data/seed-data";
 
 export function CartSidebar() {
@@ -71,7 +72,7 @@ export function CartSidebar() {
           ) : (
             items.map((item) => (
               <div
-                key={`${item.productId}-${item.size ?? ""}`}
+                key={`${item.productId}-${item.variantId ?? item.size ?? ""}`}
                 className="flex items-center gap-3"
               >
                 <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 relative">
@@ -93,20 +94,22 @@ export function CartSidebar() {
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {item.titleBn}
                       </p>
-                      {item.size && (
+                      {item.variantName && (
                         <p className="text-xs text-gray-500 truncate">
-                          সাইজ নির্বাচন করুন: {item.size}
+                          ভ্যারিয়েন্ট: {item.variantName}
                         </p>
                       )}
                       <p className="text-xs text-gray-600">
-                        {formatPrice(item.price)}
+                        {formatPriceWithUnit(item.price, item.unit)}
                       </p>
                     </div>
                     <button
                       type="button"
                       className="p-2 rounded-md hover:bg-gray-100 flex-shrink-0"
                       aria-label="আইটেম মুছুন"
-                      onClick={() => removeItem(item.productId, item.size)}
+                      onClick={() =>
+                        removeItem(item.productId, item.variantId ?? item.size)
+                      }
                     >
                       <Trash2 className="w-4 h-4 text-gray-600" />
                     </button>
@@ -122,7 +125,7 @@ export function CartSidebar() {
                           updateQuantity(
                             item.productId,
                             item.quantity - 1,
-                            item.size
+                            item.variantId ?? item.size
                           )
                         }
                       >
@@ -143,7 +146,7 @@ export function CartSidebar() {
                           updateQuantity(
                             item.productId,
                             item.quantity + 1,
-                            item.size
+                            item.variantId ?? item.size
                           )
                         }
                       >
@@ -168,7 +171,10 @@ export function CartSidebar() {
                 {suggestions.map((product) => (
                   <Link
                     key={product.slug}
-                    href={`/product/${product.slug}`}
+                    href={getProductPath({
+                      slug: product.slug,
+                      category: { slug: product.categorySlug },
+                    })}
                     className="min-w-[200px] max-w-[200px] border border-gray-200 rounded-lg p-3 hover:shadow-sm flex-shrink-0"
                     onClick={closeCart}
                   >

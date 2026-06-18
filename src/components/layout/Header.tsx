@@ -27,12 +27,12 @@ export function Header() {
     <button
       type="button"
       onClick={openCart}
-      className="relative flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
+      className="relative flex items-center gap-2 text-gray-700 hover:text-[var(--primary-color)] transition-colors"
     >
       <div className="relative">
         <ShoppingCart className="w-6 h-6" />
         {hydrated && totalItems > 0 && (
-          <span className="absolute -top-2 -right-2 brand-bg text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 brand-bg text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
             {totalItems}
           </span>
         )}
@@ -54,10 +54,10 @@ export function Header() {
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <Image
               src={SITE.logo}
-              alt="Mosafamart"
-              width={120}
-              height={32}
-              className="object-contain max-h-[50px] object-left"
+              alt={SITE.name}
+              width={72}
+              height={72}
+              className="object-contain h-14 w-14"
               priority
             />
           </Link>
@@ -87,10 +87,10 @@ export function Header() {
               <Link href="/" className="hover:opacity-80 transition-opacity">
                 <Image
                   src={SITE.logo}
-                  alt="Mosafamart"
-                  width={150}
-                  height={40}
-                  className="object-contain max-h-[80px] object-left"
+                  alt={SITE.name}
+                  width={88}
+                  height={88}
+                  className="object-contain h-20 w-20"
                   priority
                 />
               </Link>
@@ -110,9 +110,9 @@ export function Header() {
                   type="button"
                   aria-label="Search"
                   onClick={handleSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full brand-bg text-white grid place-items-center shadow brand-ring brand-hover-bg"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full brand-bg grid place-items-center shadow brand-ring brand-hover-bg"
                 >
-                  <Search className="w-4 h-4" />
+                  <Search className="w-4 h-4 text-current" />
                 </button>
               </div>
             </div>
@@ -121,16 +121,16 @@ export function Header() {
               <Link
                 aria-label="Profile"
                 href="/login"
-                className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+                className="flex items-center text-gray-700 hover:text-[var(--primary-color)] transition-colors"
               >
                 <User className="w-6 h-6" />
               </Link>
               <Link
                 href="/wishlist"
-                className="relative flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+                className="relative flex items-center text-gray-700 hover:text-[var(--primary-color)] transition-colors"
               >
                 <Heart className="w-6 h-6" />
-                <span className="absolute -top-2 -right-2 brand-bg text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 brand-bg text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                   0
                 </span>
               </Link>
@@ -141,7 +141,7 @@ export function Header() {
       </div>
 
       {/* Category nav — original markup */}
-      <div className="md:block bg-white">
+      <div className="md:block bg-white border-b-2 border-[var(--brand-green)]/15">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="relative z-30 hidden md:flex items-center py-4 justify-center">
             <div className="hidden md:flex items-center gap-x-8">

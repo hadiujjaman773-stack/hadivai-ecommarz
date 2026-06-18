@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import {
   BANNERS,
   CATEGORIES,
   PRODUCTS,
+  SITE,
 } from "../src/data/seed-data";
 
 const prisma = new PrismaClient();
@@ -14,6 +16,9 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.banner.deleteMany();
+  await prisma.shipping.deleteMany();
+  await prisma.settings.deleteMany();
+  await prisma.user.deleteMany();
 
   const categoryMap = new Map<string, string>();
 
@@ -28,6 +33,24 @@ async function main() {
     });
     categoryMap.set(cat.slug, created.id);
   }
+
+  const shippingInside = await prisma.shipping.create({
+    data: {
+      name: "Inside Dhaka",
+      nameBn: "ঢাকার ভেতরে",
+      price: SITE.shippingInsideDhaka,
+      active: true,
+    },
+  });
+
+  const shippingOutside = await prisma.shipping.create({
+    data: {
+      name: "Outside Dhaka",
+      nameBn: "ঢাকার বাহিরে",
+      price: SITE.shippingOutsideDhaka,
+      active: true,
+    },
+  });
 
   for (const product of PRODUCTS) {
     const categoryId = categoryMap.get(product.categorySlug);
@@ -51,9 +74,17 @@ async function main() {
         comparePrice: product.comparePrice,
         discount,
         images: product.images,
-        sizes: product.sizes,
+        variants: product.sizes.map((size, i) => ({
+          id: `seed-var-${product.slug}-${i}`,
+          nameBn: size,
+          price: product.price,
+          comparePrice: product.comparePrice ?? null,
+          image: product.images[0] ?? null,
+          inStock: true,
+        })),
         categoryId,
         featured: product.featured,
+        shippingFree: false,
       },
     });
   }
@@ -73,7 +104,34 @@ async function main() {
     });
   }
 
+  await prisma.settings.create({
+    data: {
+      siteName: SITE.name,
+      tagline: SITE.tagline,
+      description: SITE.description,
+      footerText: SITE.footerText,
+      phone: SITE.phone,
+      whatsapp: SITE.whatsapp,
+      messenger: SITE.messenger,
+      logo: SITE.logo,
+      shippingInsideDhaka: SITE.shippingInsideDhaka,
+      shippingOutsideDhaka: SITE.shippingOutsideDhaka,
+    },
+  });
+
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  await prisma.user.create({
+    data: {
+      email: "admin@mosafamart.com",
+      passwordHash: await bcrypt.hash(adminPassword, 12),
+      name: "Super Admin",
+      role: "SUPER_ADMIN",
+    },
+  });
+
   console.log("Seed completed!");
+  console.log(`Admin login: admin@mosafamart.com / ${adminPassword}`);
+  console.log(`Shipping options: ${shippingInside.nameBn}, ${shippingOutside.nameBn}`);
 }
 
 main()

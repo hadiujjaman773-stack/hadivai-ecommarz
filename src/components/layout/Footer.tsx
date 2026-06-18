@@ -6,17 +6,17 @@ const iconClass = "w-5 h-5";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="footer-brand text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <Link href="/" className="hover:opacity-80 transition-opacity inline-block">
               <Image
                 src={SITE.logo}
-                alt="Mosafamart"
-                width={150}
-                height={40}
-                className="object-contain"
+                alt={SITE.name}
+                width={120}
+                height={120}
+                className="object-contain h-24 w-auto"
               />
             </Link>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -119,7 +119,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-6 text-center text-sm text-gray-400">
+        <div className="border-t border-white/10 mt-8 pt-6 text-center text-sm text-gray-400">
           © {new Date().getFullYear()} {SITE.name}. সর্বস্বত্ব সংরক্ষিত।
         </div>
       </div>

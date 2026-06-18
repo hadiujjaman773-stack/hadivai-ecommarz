@@ -1,12 +1,27 @@
+export interface ProductVariant {
+  id: string;
+  nameBn: string;
+  price: number;
+  comparePrice?: number | null;
+  image?: string | null;
+  stock?: number;
+  inStock: boolean;
+}
+
 export interface CartItem {
   productId: string;
   slug: string;
+  categorySlug: string;
   titleBn: string;
   price: number;
   comparePrice?: number;
   image: string;
+  variantId?: string;
+  variantName?: string;
   size?: string;
+  unit?: string;
   quantity: number;
+  shippingFree?: boolean;
 }
 
 export interface ProductWithCategory {
@@ -20,9 +35,12 @@ export interface ProductWithCategory {
   comparePrice?: number | null;
   discount?: number | null;
   images: string[];
-  sizes: string[];
+  variants: ProductVariant[];
+  unit?: string;
+  stock?: number;
   featured: boolean;
   inStock: boolean;
+  shippingFree?: boolean;
   category: {
     id: string;
     name: string;

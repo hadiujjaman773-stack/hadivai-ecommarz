@@ -1,15 +1,17 @@
 export const IMG_BASE = "https://mosafamart.com";
 
 export const SITE = {
-  name: "Mosafa Mart",
-  tagline: "মানসম্মত হোম ও লাইফস্টাইল পণ্যের অনলাইন শপ",
-  description: "ঘরের প্রতিটি প্রয়োজনের জন্য আপনার বিশ্বস্ত অনলাইন ঠিকানা",
+  name: "Satkhira Modhu Shop",
+  shortName: "SMS",
+  tagline: "খাঁটি মধুর বিশ্বস্ত ঠিকানা",
+  description:
+    "সাতক্ষীরার খাঁটি মধু – প্রাকৃতিক ও বিশুদ্ধ মধুর জন্য আপনার বিশ্বস্ত অনলাইন দোকান",
   footerText:
-    "Mosafa Mart হলো মানসম্মত হোম ডেকর, ফার্নিচার ও লাইফস্টাইল পণ্যের বিশ্বস্ত অনলাইন শপ। আধুনিক ডিজাইন ও সাশ্রয়ী মূল্যে ঘরের সব প্রয়োজন এক জায়গায়।",
+    "সাতক্ষীরা মধু শপ (SMS) – আমরা সরাসরি মৌচাক থেকে সংগ্রহ করা খাঁটি, প্রাকৃতিক মধু সরবরাহ করি। গুণগত মান ও সততার প্রতিশ্রুতি।",
   phone: "01700000000",
   whatsapp: "8801700000000",
   messenger: "https://m.me/61567270858287",
-  logo: `${IMG_BASE}/uploads/1766678602879937851_mosafa.webp`,
+  logo: "/logo.png",
   shippingOutsideDhaka: 120,
   shippingInsideDhaka: 80,
 };
@@ -27,9 +29,9 @@ export const NAV_CATEGORIES = [
 
 export const BANNERS = [
   {
-    title: "Mosafa Mart",
-    titleBn: "Mosafa Mart – মানসম্মত হোম ও লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা",
-    eyebrow: "Mosafa Mart – মানসম্মত হোম ও লাইফস্টাইল পণ্যের বিশ্বস্ত ঠিকানা",
+    title: "Satkhira Modhu Shop",
+    titleBn: "সাতক্ষীরা মধু শপ – খাঁটি মধুর বিশ্বস্ত ঠিকানা",
+    eyebrow: "সাতক্ষীরা মধু শপ – খাঁটি মধুর বিশ্বস্ত ঠিকানা",
     heading: "আপনার ঘরকে দিন নতুন রূপ",
     subtitleBn:
       "আধুনিক হোম ডেকর, স্টাইলিশ ফার্নিচার ও দৈনন্দিন প্রয়োজনীয় পণ্যের সেরা কালেকশন এক জায়গায়। মান, ডিজাইন ও দামে নিশ্চয়তা।",
@@ -42,7 +44,7 @@ export const BANNERS = [
     eyebrow: "ঘরের প্রতিটি কোণ হোক পরিপূর্ণ",
     heading: "গুণগত মান, সাশ্রয়ী মূল্য",
     subtitleBn:
-      "Mosafa Mart থেকে কিনুন নির্ভরযোগ্য মানের হোম ও কিচেন পণ্য। সুন্দর ডিজাইন, ব্যবহার উপযোগী ও দীর্ঘস্থায়ী।",
+      "সাতক্ষীরা মধু শপ থেকে কিনুন নির্ভরযোগ্য মানের খাঁটি মধু। প্রাকৃতিক, বিশুদ্ধ ও স্বাস্থ্যকর।",
     image: `${IMG_BASE}/uploads/1768463280404749517_Generated_image_1(7).webp`,
     link: "/category/bedside-tables",
   },

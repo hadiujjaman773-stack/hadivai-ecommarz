@@ -1,5 +1,17 @@
 import { prisma } from "@/lib/prisma";
+import {
+  getDisplayComparePrice,
+  getDisplayPrice,
+  parseVariants,
+} from "@/lib/product-variants";
+import {
+  deductStockForOrder,
+  parseOrderItems,
+  restoreStockForOrder,
+  validateOrderStock,
+} from "@/lib/inventory";
 import type { BannerItem, CategoryItem, ProductWithCategory } from "@/types";
+import { isInventoryEnabled } from "@/lib/feature-flags";
 
 function mapProduct(
   product: {
@@ -13,12 +25,19 @@ function mapProduct(
     comparePrice: number | null;
     discount: number | null;
     images: string[];
-    sizes: string[];
+    variants: unknown;
+    unit?: string;
     featured: boolean;
     inStock: boolean;
+    stock?: number;
+    shippingFree?: boolean;
     category: { id: string; name: string; nameBn: string; slug: string };
   }
 ): ProductWithCategory {
+  const variants = parseVariants(product.variants);
+  const price = getDisplayPrice(product.price, variants);
+  const comparePrice = getDisplayComparePrice(product.comparePrice, variants);
+
   return {
     id: product.id,
     title: product.title,
@@ -26,13 +45,16 @@ function mapProduct(
     slug: product.slug,
     description: product.description,
     descriptionBn: product.descriptionBn,
-    price: product.price,
-    comparePrice: product.comparePrice,
+    price,
+    comparePrice,
     discount: product.discount,
     images: product.images,
-    sizes: product.sizes,
+    variants,
+    unit: product.unit ?? "piece",
+    stock: product.stock ?? 0,
     featured: product.featured,
     inStock: product.inStock,
+    shippingFree: product.shippingFree ?? false,
     category: product.category,
   };
 }
@@ -80,10 +102,29 @@ export async function getProductsFromDb(options?: {
 }
 
 export async function getProductFromDb(slug: string) {
-  const product = await prisma.product.findUnique({
+  const product = await prisma.product.findFirst({
     where: { slug },
     include: { category: true },
   });
+  return product ? mapProduct(product) : null;
+}
+
+export async function getProductFromDbByPath(
+  categorySlug: string,
+  productSlug: string
+) {
+  let product = await prisma.product.findFirst({
+    where: { slug: productSlug, category: { slug: categorySlug } },
+    include: { category: true },
+  });
+
+  if (!product) {
+    product = await prisma.product.findFirst({
+      where: { slug: productSlug },
+      include: { category: true },
+    });
+  }
+
   return product ? mapProduct(product) : null;
 }
 
@@ -106,6 +147,7 @@ export async function getBannersFromDb(): Promise<BannerItem[]> {
 export async function createOrderInDb(data: {
   orderNumber: string;
   fullName: string;
+  email?: string;
   phone: string;
   address: string;
   city: string;
@@ -115,11 +157,21 @@ export async function createOrderInDb(data: {
   subtotal: number;
   shipping: number;
   total: number;
+  clientIp?: string;
 }) {
-  return prisma.order.create({
+  const lineItems = parseOrderItems(data.items);
+  if (isInventoryEnabled()) {
+    const stockError = await validateOrderStock(lineItems);
+    if (stockError) {
+      throw new Error(stockError);
+    }
+  }
+
+  const order = await prisma.order.create({
     data: {
       orderNumber: data.orderNumber,
       fullName: data.fullName,
+      email: data.email || null,
       phone: data.phone,
       address: data.address,
       city: data.city,
@@ -129,6 +181,21 @@ export async function createOrderInDb(data: {
       subtotal: data.subtotal,
       shipping: data.shipping,
       total: data.total,
+      clientIp: data.clientIp || null,
     },
   });
+
+  try {
+    if (isInventoryEnabled()) {
+      await deductStockForOrder(order.id, lineItems);
+      return await prisma.order.update({
+        where: { id: order.id },
+        data: { stockDeducted: true },
+      });
+    }
+    return order;
+  } catch (err) {
+    await prisma.order.delete({ where: { id: order.id } });
+    throw err;
+  }
 }

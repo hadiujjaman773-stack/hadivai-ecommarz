@@ -44,3 +44,7 @@ next-env.d.ts
 
 # local credentials (never commit)
 .cursor/ehadivai-ecommarz.env
+
+# admin-uploaded images (local fallback)
+/public/uploads/*
+!/public/uploads/.gitkeep

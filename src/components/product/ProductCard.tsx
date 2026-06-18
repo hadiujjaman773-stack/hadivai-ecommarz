@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Heart, BadgePercent } from "lucide-react";
 import type { ProductWithCategory } from "@/types";
-import { formatPrice, calcDiscount } from "@/lib/format";
+import { formatPrice, formatPriceWithUnit, calcDiscount } from "@/lib/format";
+import { getProductPath } from "@/lib/product-url";
 import { useCart } from "@/lib/cart-context";
-import { SITE } from "@/data/seed-data";
 
 const DEFAULT_CARD_HEIGHTS = {
   "--card-h": "385px",
@@ -15,7 +15,7 @@ const DEFAULT_CARD_HEIGHTS = {
   "--card-h-lg": "400px",
 } as React.CSSProperties;
 
-const RELATED_CARD_HEIGHTS = {
+export const RELATED_CARD_HEIGHTS = {
   "--card-h": "385px",
   "--card-h-sm": "300px",
   "--card-h-lg": "300px",
@@ -32,83 +32,85 @@ export function ProductCard({
 }) {
   const { addItem, openCart } = useCart();
   const router = useRouter();
+  const firstVariant = product.variants[0];
+  const activePrice = firstVariant?.price ?? product.price;
+  const activeCompare = firstVariant?.comparePrice ?? product.comparePrice;
   const discount =
-    product.discount ?? calcDiscount(product.price, product.comparePrice);
+    product.discount ?? calcDiscount(activePrice, activeCompare);
+  const productHref = getProductPath(product);
 
   const cardHeights = cardHeightsOverride ?? DEFAULT_CARD_HEIGHTS;
 
-  const cartPayload = {
+  const buildCartPayload = () => ({
     productId: product.id,
     slug: product.slug,
-    titleBn: product.titleBn,
-    price: product.price,
-    comparePrice: product.comparePrice ?? undefined,
-    image: product.images[0] ?? "",
-    ...(product.sizes[0] ? { size: product.sizes[0] } : {}),
-  };
+    categorySlug: product.category.slug,
+    titleBn: firstVariant
+      ? `${product.titleBn} (${firstVariant.nameBn})`
+      : product.titleBn,
+    price: activePrice,
+    comparePrice: activeCompare ?? undefined,
+    image: firstVariant?.image || product.images[0] || "",
+    variantId: firstVariant?.id,
+    variantName: firstVariant?.nameBn,
+    shippingFree: product.shippingFree ?? false,
+    unit: product.unit,
+  });
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(cartPayload);
+    addItem(buildCartPayload());
     openCart();
   };
 
   const handleOrderNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(cartPayload);
+    addItem(buildCartPayload());
     router.push("/checkout");
   };
 
-  const disabled = !product.inStock;
+  const disabled =
+    product.variants.length > 0
+      ? !product.variants.some((v) => (v.stock ?? 0) > 0)
+      : (product.stock ?? 0) <= 0;
 
   const imageBlock = (
     <div
       className="relative overflow-hidden rounded-t-lg bg-gray-100 w-full h-[var(--card-h)] sm:h-[var(--card-h-sm)] lg:h-[var(--card-h-lg)] mb-4"
       style={cardHeights}
     >
-      <button
-        type="button"
-        aria-label="Add to wishlist"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        className="absolute top-3 left-3 z-20 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Heart className="text-gray-700 w-5 h-5" />
-      </button>
-      <Image
-        src={product.images[0] ?? SITE.logo}
-        alt={product.titleBn}
-        fill
-        className="object-cover group-hover:scale-105 transition-transform duration-300"
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-      />
+      {(firstVariant?.image || product.images[0]) && (
+        <Image
+          src={firstVariant?.image || product.images[0]}
+          alt={product.titleBn}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+      )}
       {discount > 0 && (
-        <div className="absolute top-3 right-3">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-red-500 text-white">
-            <BadgePercent className="w-3 h-3" />
-            ছাড় {discount}%
-          </span>
-        </div>
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <BadgePercent className="w-3 h-3" aria-hidden="true" />
+          {discount}%
+        </span>
       )}
     </div>
   );
 
   const bodyBlock = (
-    <div className="px-4 pb-4 space-y-2">
-      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+    <div className="px-4 pb-4">
+      <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem]">
         {product.titleBn}
       </h3>
-      <div className="flex items-center space-x-2">
-        <span className="md:text-lg font-bold text-gray-900">
-          {formatPrice(product.price)}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-lg font-bold text-gray-900">
+          {formatPriceWithUnit(activePrice, product.unit)}
         </span>
-        {product.comparePrice && product.comparePrice > product.price && (
-          <span className="text-sm text-gray-500 line-through">
-            {formatPrice(product.comparePrice)}
+        {activeCompare && activeCompare > activePrice && (
+          <span className="text-sm text-gray-400 line-through">
+            {formatPrice(activeCompare)}
           </span>
         )}
       </div>
@@ -126,7 +128,7 @@ export function ProductCard({
           type="button"
           disabled={disabled}
           onClick={handleOrderNow}
-          className="w-full sm:flex-1 py-2 px-4 border border-gray-300 rounded-lg text-sm hover:border-gray-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:flex-1 py-2 px-4 text-sm rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed btn-outline"
         >
           এখনই অর্ডার করুন
         </button>
@@ -137,7 +139,7 @@ export function ProductCard({
   if (linked) {
     return (
       <Link
-        href={`/product/${product.slug}`}
+        href={productHref}
         className="group transition-all duration-300 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl block"
       >
         {imageBlock}
@@ -148,47 +150,53 @@ export function ProductCard({
 
   return (
     <div className="group transition-all duration-300 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl">
-      <Link href={`/product/${product.slug}`} className="block">
+      <Link href={productHref} className="block">
         {imageBlock}
       </Link>
-      <div className="px-4 pb-4 space-y-2">
-        <Link href={`/product/${product.slug}`}>
-          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+      <div className="px-4 pb-4">
+        <Link href={productHref}>
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 min-h-[2.5rem] hover:text-[var(--accent-color)]">
             {product.titleBn}
           </h3>
-          <div className="flex items-center space-x-2">
-            <span className="md:text-lg font-bold text-gray-900">
-              {formatPrice(product.price)}
-            </span>
-            {product.comparePrice && product.comparePrice > product.price && (
-              <span className="text-sm text-gray-500 line-through">
-                {formatPrice(product.comparePrice)}
-              </span>
-            )}
-          </div>
         </Link>
-        <div className="flex flex-col sm:flex-row items-stretch gap-2 mt-3">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg font-bold text-gray-900">
+            {formatPriceWithUnit(activePrice, product.unit)}
+          </span>
+          {activeCompare && activeCompare > activePrice && (
+            <span className="text-sm text-gray-400 line-through">
+              {formatPrice(activeCompare)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
           <button
             type="button"
-            disabled={disabled}
-            onClick={handleAddToCart}
-            className="btn-primary w-full sm:flex-1 py-2 px-4 text-sm rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-1"
+            className="p-2 rounded-full hover:bg-gray-100"
+            aria-label="Wishlist"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>কার্টে যোগ করুন</span>
+            <Heart className="w-5 h-5 text-gray-400" />
           </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={handleOrderNow}
-            className="w-full sm:flex-1 py-2 px-4 border border-gray-300 rounded-lg text-sm hover:border-gray-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            এখনই অর্ডার করুন
-          </button>
+          <div className="flex flex-col sm:flex-row items-stretch gap-2 flex-1 ml-2">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleAddToCart}
+              className="btn-primary w-full sm:flex-1 py-2 px-4 text-sm rounded-lg cursor-pointer disabled:opacity-50"
+            >
+              কার্টে যোগ করুন
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleOrderNow}
+              className="w-full sm:flex-1 py-2 px-4 text-sm rounded-lg cursor-pointer disabled:opacity-50 btn-outline"
+            >
+              অর্ডার
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-export { RELATED_CARD_HEIGHTS };

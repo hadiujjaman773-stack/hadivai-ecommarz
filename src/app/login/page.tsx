@@ -1,7 +1,8 @@
 import { SignInForm } from "@/components/auth/SignInForm";
+import { SITE } from "@/data/seed-data";
 
 export const metadata = {
-  title: "Sign in | Mosafa Mart",
+  title: `লগইন | ${SITE.name}`,
 };
 
 export default function LoginPage() {

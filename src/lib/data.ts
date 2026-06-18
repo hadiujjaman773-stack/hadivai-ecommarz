@@ -23,9 +23,18 @@ function staticProducts(): ProductWithCategory[] {
       comparePrice: p.comparePrice,
       discount,
       images: p.images,
-      sizes: p.sizes,
+      variants: p.sizes.map((s, i) => ({
+        id: `static-var-${idx}-${i}`,
+        nameBn: s,
+        price: p.price,
+        comparePrice: p.comparePrice ?? null,
+        image: p.images[0] ?? null,
+        inStock: true,
+      })),
+      unit: "piece",
       featured: p.featured,
       inStock: true,
+      shippingFree: false,
       category: {
         id: `cat-${cat.slug}`,
         name: cat.name,
@@ -62,8 +71,22 @@ function staticBanners(): BannerItem[] {
 
 async function getDb() {
   try {
-    const { getProductsFromDb, getCategoriesFromDb, getBannersFromDb, getCategoryFromDb, getProductFromDb } = await import("./db");
-    return { getProductsFromDb, getCategoriesFromDb, getBannersFromDb, getCategoryFromDb, getProductFromDb };
+    const {
+      getProductsFromDb,
+      getCategoriesFromDb,
+      getBannersFromDb,
+      getCategoryFromDb,
+      getProductFromDb,
+      getProductFromDbByPath,
+    } = await import("./db");
+    return {
+      getProductsFromDb,
+      getCategoriesFromDb,
+      getBannersFromDb,
+      getCategoryFromDb,
+      getProductFromDb,
+      getProductFromDbByPath,
+    };
   } catch {
     return null;
   }
@@ -140,6 +163,31 @@ export async function getProductBySlug(
   return staticProducts().find((p) => p.slug === slug) ?? null;
 }
 
+export async function getProductByPath(
+  categorySlug: string,
+  productSlug: string
+): Promise<ProductWithCategory | null> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const product = await db.getProductFromDbByPath(
+        categorySlug,
+        productSlug
+      );
+      if (product) return product;
+    } catch {
+      /* fallback */
+    }
+  }
+  return (
+    staticProducts().find(
+      (p) => p.slug === productSlug && p.category.slug === categorySlug
+    ) ??
+    staticProducts().find((p) => p.slug === productSlug) ??
+    null
+  );
+}
+
 export async function getBanners(): Promise<BannerItem[]> {
   const db = await getDb();
   if (db) {
@@ -155,6 +203,7 @@ export async function getBanners(): Promise<BannerItem[]> {
 
 export async function createOrder(data: {
   fullName: string;
+  email?: string;
   phone: string;
   address: string;
   city: string;
@@ -164,6 +213,7 @@ export async function createOrder(data: {
   subtotal: number;
   shipping: number;
   total: number;
+  clientIp?: string;
 }) {
   const orderNumber = `MM${Date.now().toString(36).toUpperCase()}`;
 

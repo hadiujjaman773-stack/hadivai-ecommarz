@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, BadgePercent, Zap } from "lucide-react";
-import type { ProductWithCategory } from "@/types";
-import { formatPrice, calcDiscount } from "@/lib/format";
+import type { ProductVariant, ProductWithCategory } from "@/types";
+import { formatPrice, formatPriceWithUnit, calcDiscount } from "@/lib/format";
+import { getUnitLabel } from "@/lib/product-units";
 import { useCart } from "@/lib/cart-context";
 import { SITE } from "@/data/seed-data";
 
@@ -47,22 +48,57 @@ function MessengerIcon() {
 export function ProductDetail({ product }: { product: ProductWithCategory }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    product.variants[0] ?? null
+  );
   const { addItem } = useCart();
   const router = useRouter();
-  const discount =
-    product.discount ?? calcDiscount(product.price, product.comparePrice);
 
-  const cartPayload = {
-    productId: product.id,
-    slug: product.slug,
-    titleBn: product.titleBn,
-    price: product.price,
-    comparePrice: product.comparePrice ?? undefined,
-    image: product.images[0] ?? "",
-  };
+  const activePrice = selectedVariant?.price ?? product.price;
+  const activeCompare = selectedVariant?.comparePrice ?? product.comparePrice;
+  const discount =
+    product.discount ?? calcDiscount(activePrice, activeCompare);
+
+  const displayImages = useMemo(() => {
+    const base = product.images.length ? product.images : [];
+    if (selectedVariant?.image) {
+      return [selectedVariant.image, ...base.filter((i) => i !== selectedVariant.image)];
+    }
+    return base;
+  }, [product.images, selectedVariant]);
+
+  const availableStock = selectedVariant
+    ? (selectedVariant.stock ?? 0)
+    : (product.stock ?? 0);
+
+  const inStock = availableStock > 0;
+
+  useEffect(() => {
+    setQuantity((q) => Math.min(Math.max(1, q), Math.max(1, availableStock)));
+  }, [selectedVariant, availableStock]);
 
   const handleOrder = () => {
-    addItem(cartPayload, quantity);
+    if (quantity > availableStock) {
+      return;
+    }
+    addItem(
+      {
+        productId: product.id,
+        slug: product.slug,
+        categorySlug: product.category.slug,
+        titleBn: selectedVariant
+          ? `${product.titleBn} (${selectedVariant.nameBn})`
+          : product.titleBn,
+        price: activePrice,
+        comparePrice: activeCompare ?? undefined,
+        image: selectedVariant?.image || product.images[0] || "",
+        variantId: selectedVariant?.id,
+        variantName: selectedVariant?.nameBn,
+        shippingFree: product.shippingFree ?? false,
+        unit: product.unit,
+      },
+      quantity
+    );
     router.push("/checkout");
   };
 
@@ -93,7 +129,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                     className="flex h-full transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${selectedImage * 100}%)` }}
                   >
-                    {product.images.map((img, idx) => (
+                    {displayImages.map((img, idx) => (
                       <div
                         key={`${img}-${idx}`}
                         className="relative h-full w-full shrink-0 basis-full"
@@ -111,9 +147,9 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                   </div>
                 </div>
 
-                {product.images.length > 1 && (
+                {displayImages.length > 1 && (
                   <div className="mt-3 grid grid-cols-5 sm:grid-cols-6 md:grid-cols-5 gap-2">
-                    {product.images.map((img, idx) => (
+                    {displayImages.map((img, idx) => (
                       <button
                         key={`thumb-${img}-${idx}`}
                         type="button"
@@ -149,12 +185,11 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
               <div className="mt-0">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(product.price)}
+                    {formatPriceWithUnit(activePrice, product.unit)}
                   </span>
-                  {product.comparePrice &&
-                    product.comparePrice > product.price && (
+                  {activeCompare && activeCompare > activePrice && (
                       <span className="text-sm text-gray-400 line-through">
-                        {formatPrice(product.comparePrice)}
+                        {formatPrice(activeCompare)}
                       </span>
                     )}
                   {discount > 0 && (
@@ -166,7 +201,47 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                 </div>
 
                 <div className="space-y-6">
+                  {product.variants.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 mb-2">
+                        ভ্যারিয়েন্ট নির্বাচন করুন
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {product.variants.map((variant) => (
+                          <button
+                            key={variant.id}
+                            type="button"
+                            disabled={!variant.inStock}
+                            onClick={() => {
+                              setSelectedVariant(variant);
+                              setSelectedImage(0);
+                            }}
+                            className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                              selectedVariant?.id === variant.id
+                                ? "border-[var(--accent-color)] bg-[var(--brand-green-muted)] text-[var(--brand-green)]"
+                                : "border-gray-300 hover:border-gray-400"
+                            } disabled:opacity-40`}
+                          >
+                            {variant.nameBn} — {formatPrice(variant.price)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      {inStock ? (
+                        <>
+                          স্টকে আছে:{" "}
+                          <span className="font-medium text-gray-900">
+                            {availableStock} {getUnitLabel(product.unit)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-red-600 font-medium">স্টক শেষ</span>
+                      )}
+                    </p>
                     <div className="flex items-center gap-3">
                       <div className="inline-flex items-center border border-gray-300 rounded-md">
                         <button
@@ -191,7 +266,10 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                           type="button"
                           className="px-2 py-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                           aria-label="Increase quantity"
-                          onClick={() => setQuantity((q) => q + 1)}
+                          disabled={quantity >= availableStock}
+                          onClick={() =>
+                            setQuantity((q) => Math.min(availableStock, q + 1))
+                          }
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -200,12 +278,8 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                       <button
                         type="button"
                         onClick={handleOrder}
-                        disabled={!product.inStock}
-                        className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          backgroundColor: "rgb(252, 137, 52)",
-                          color: "rgb(255, 255, 255)",
-                        }}
+                        disabled={!inStock}
+                        className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Zap className="w-4 h-4" aria-hidden="true" />
                         এখনই অর্ডার করুন
@@ -215,12 +289,8 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
                     <button
                       type="button"
                       onClick={handleOrder}
-                      disabled={!product.inStock}
-                      className="inline-flex sm:hidden items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
-                      style={{
-                        backgroundColor: "rgb(252, 137, 52)",
-                        color: "rgb(255, 255, 255)",
-                      }}
+                      disabled={!inStock}
+                      className="inline-flex sm:hidden items-center gap-2 px-4 py-2 rounded-lg btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
                     >
                       <Zap className="w-4 h-4" aria-hidden="true" />
                       এখনই অর্ডার করুন
@@ -240,6 +310,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
 
                 <div className="mt-4 space-y-1 text-sm text-gray-700">
                   <div>ক্যাটাগরি: {categoryLabel}</div>
+                  <div>ইউনিট: {getUnitLabel(product.unit)}</div>
                 </div>
               </div>
 

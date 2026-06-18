@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatPriceWithUnit } from "@/lib/format";
+import { getUnitLabel } from "@/lib/product-units";
 import { SITE } from "@/data/seed-data";
+
+interface ShippingOption {
+  id: string;
+  name: string;
+  nameBn: string;
+  price: number;
+}
 
 export function CheckoutForm() {
   const { items, subtotal, totalItems, updateQuantity, removeItem, clearCart } =
@@ -15,19 +23,78 @@ export function CheckoutForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [cityType, setCityType] = useState<"outside" | "inside" | null>(null);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [selectedShippingId, setSelectedShippingId] = useState<string | null>(
+    null
+  );
   const [showHelp, setShowHelp] = useState(false);
 
-  const shipping =
-    cityType === "inside"
-      ? SITE.shippingInsideDhaka
-      : cityType === "outside"
-        ? SITE.shippingOutsideDhaka
-        : 0;
+  const needsShipping = useMemo(
+    () => items.some((item) => !item.shippingFree),
+    [items]
+  );
+
+  useEffect(() => {
+    if (!needsShipping) {
+      setShippingOptions([]);
+      setSelectedShippingId(null);
+      return;
+    }
+
+    fetch("/api/shipping")
+      .then((r) => r.json())
+      .then((data: ShippingOption[]) => {
+        if (data.length > 0) {
+          setShippingOptions(data);
+          setSelectedShippingId(data[0].id);
+        } else {
+          const fallback: ShippingOption[] = [
+            {
+              id: "outside",
+              name: "Outside Dhaka",
+              nameBn: "ঢাকার বাহিরে",
+              price: SITE.shippingOutsideDhaka,
+            },
+            {
+              id: "inside",
+              name: "Inside Dhaka",
+              nameBn: "ঢাকার ভেতরে",
+              price: SITE.shippingInsideDhaka,
+            },
+          ];
+          setShippingOptions(fallback);
+          setSelectedShippingId(fallback[0].id);
+        }
+      })
+      .catch(() => {
+        const fallback: ShippingOption[] = [
+          {
+            id: "outside",
+            name: "Outside Dhaka",
+            nameBn: "ঢাকার বাহিরে",
+            price: SITE.shippingOutsideDhaka,
+          },
+          {
+            id: "inside",
+            name: "Inside Dhaka",
+            nameBn: "ঢাকার ভেতরে",
+            price: SITE.shippingInsideDhaka,
+          },
+        ];
+        setShippingOptions(fallback);
+        setSelectedShippingId(fallback[0].id);
+      });
+  }, [needsShipping]);
+
+  const selectedShipping = shippingOptions.find(
+    (s) => s.id === selectedShippingId
+  );
+  const shipping = needsShipping ? (selectedShipping?.price ?? 0) : 0;
   const total = subtotal + shipping;
 
   const [form, setForm] = useState({
     fullName: "",
+    email: "",
     phone: "",
     address: "",
     note: "",
@@ -42,8 +109,8 @@ export function CheckoutForm() {
       setError("পূর্ণ নাম ও ঠিকানা প্রয়োজন");
       return;
     }
-    if (!cityType) {
-      setError("একটি শহর নির্বাচন করুন");
+    if (needsShipping && !selectedShippingId) {
+      setError("একটি শিপিং অপশন নির্বাচন করুন");
       return;
     }
     setLoading(true);
@@ -54,7 +121,9 @@ export function CheckoutForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          city: cityType === "inside" ? "ঢাকার ভেতরে" : "ঢাকার বাহিরে",
+          city: needsShipping
+            ? selectedShipping?.nameBn || ""
+            : "ফ্রি শিপিং",
           district: "",
           items,
           subtotal,
@@ -114,6 +183,18 @@ export function CheckoutForm() {
               </div>
               <div>
                 <label className="block text-black font-semibold mb-1">
+                  ইমেইল <span className="text-gray-400 font-normal">(ঐচ্ছিক)</span>
+                </label>
+                <input
+                  type="email"
+                  className="input-field"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-black font-semibold mb-1">
                   ফোন
                 </label>
                 <input
@@ -136,43 +217,41 @@ export function CheckoutForm() {
                   }
                 />
               </div>
-              <div>
-                <label className="block text-black font-semibold mb-1">
-                  শহর
-                </label>
-                <div className="space-y-2">
-                  <label className="w-full flex items-center justify-between rounded-md border p-3 text-sm transition-colors cursor-pointer border-gray-300 bg-gray-50 text-gray-800 hover:border-gray-400">
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="city"
-                        className="h-4 w-4 accent-violet-600"
-                        checked={cityType === "outside"}
-                        onChange={() => setCityType("outside")}
-                      />
-                      <span className="font-medium">ঢাকার বাহিরে</span>
-                    </span>
-                    <span className="text-gray-900">
-                      {formatPrice(SITE.shippingOutsideDhaka)}
-                    </span>
+              {needsShipping ? (
+                <div>
+                  <label className="block text-black font-semibold mb-1">
+                    শিপিং অপশন
                   </label>
-                  <label className="w-full flex items-center justify-between rounded-md border p-3 text-sm transition-colors cursor-pointer border-gray-300 bg-gray-50 text-gray-800 hover:border-gray-400">
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="city"
-                        className="h-4 w-4 accent-violet-600"
-                        checked={cityType === "inside"}
-                        onChange={() => setCityType("inside")}
-                      />
-                      <span className="font-medium">ঢাকার ভেতরে</span>
-                    </span>
-                    <span className="text-gray-900">
-                      {formatPrice(SITE.shippingInsideDhaka)}
-                    </span>
-                  </label>
+                  <div className="space-y-2">
+                    {shippingOptions.map((option) => (
+                      <label
+                        key={option.id}
+                        className="w-full flex items-center justify-between rounded-md border p-3 text-sm transition-colors cursor-pointer border-gray-300 bg-gray-50 text-gray-800 hover:border-gray-400"
+                      >
+                        <span className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="shipping"
+                            className="h-4 w-4 accent-violet-600"
+                            checked={selectedShippingId === option.id}
+                            onChange={() => setSelectedShippingId(option.id)}
+                          />
+                          <span className="font-medium">{option.nameBn}</span>
+                        </span>
+                        <span className="text-gray-900">
+                          {formatPrice(option.price)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-green-600 font-medium">
+                    ✓ এই অর্ডারে ফ্রি শিপিং প্রযোজ্য
+                  </p>
+                </div>
+              )}
               <div className="md:col-span-2">
                 <label className="block text-black font-semibold mb-1">
                   অর্ডার নোট
@@ -193,9 +272,9 @@ export function CheckoutForm() {
                 </button>
                 {showHelp && (
                   <p className="mt-2 text-sm text-gray-600">
-                    নিশ্চিত করুন পূর্ণ নাম, ঠিকানা ও শহর নির্বাচন করা হয়েছে।
-                    কার্টে অন্তত একটি পণ্য থাকতে হবে। সমস্যা থাকলে WhatsApp বা
-                    ফোনে যোগাযোগ করুন।
+                    নিশ্চিত করুন পূর্ণ নাম, ঠিকানা ও শিপিং অপশন নির্বাচন করা
+                    হয়েছে। কার্টে অন্তত একটি পণ্য থাকতে হবে। সমস্যা থাকলে
+                    WhatsApp বা ফোনে যোগাযোগ করুন।
                   </p>
                 )}
               </div>
@@ -209,7 +288,7 @@ export function CheckoutForm() {
           <div className="space-y-3">
             {items.map((item, index) => (
               <div
-                key={`${item.productId}-${item.size ?? ""}`}
+                key={`${item.productId}-${item.variantId ?? item.size ?? ""}`}
                 className="flex items-center gap-3"
               >
                 <div className="relative w-14 h-14 rounded-md overflow-hidden ring-1 ring-gray-200 flex-shrink-0">
@@ -231,9 +310,13 @@ export function CheckoutForm() {
                     {item.titleBn}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    {item.size
-                      ? `সাইজ নির্বাচন করুন: ${item.size}`
-                      : `#${index + 1}`}
+                    {item.variantName
+                      ? `ভ্যারিয়েন্ট: ${item.variantName}`
+                      : item.size
+                        ? `সাইজ: ${item.size}`
+                        : item.unit
+                          ? `ইউনিট: ${getUnitLabel(item.unit)}`
+                          : `#${index + 1}`}
                   </p>
                   <div className="mt-1 flex items-center gap-2">
                     <div className="inline-flex items-center border border-gray-300 rounded-md">
@@ -246,7 +329,7 @@ export function CheckoutForm() {
                           updateQuantity(
                             item.productId,
                             item.quantity - 1,
-                            item.size
+                            item.variantId ?? item.size
                           )
                         }
                       >
@@ -267,7 +350,7 @@ export function CheckoutForm() {
                           updateQuantity(
                             item.productId,
                             item.quantity + 1,
-                            item.size
+                            item.variantId ?? item.size
                           )
                         }
                       >
@@ -278,7 +361,9 @@ export function CheckoutForm() {
                       type="button"
                       className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 disabled:opacity-50"
                       aria-label="আইটেম মুছুন"
-                      onClick={() => removeItem(item.productId, item.size)}
+                      onClick={() =>
+                        removeItem(item.productId, item.variantId ?? item.size)
+                      }
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -304,9 +389,11 @@ export function CheckoutForm() {
             <div className="flex justify-between">
               <span className="text-gray-600">শিপিং</span>
               <span className="font-medium">
-                {cityType === null
-                  ? "একটি শহর নির্বাচন করুন"
-                  : formatPrice(shipping)}
+                {!needsShipping
+                  ? "ফ্রি"
+                  : selectedShippingId
+                    ? formatPrice(shipping)
+                    : "অপশন নির্বাচন করুন"}
               </span>
             </div>
             <div className="flex justify-between">
@@ -321,9 +408,7 @@ export function CheckoutForm() {
             </div>
           </div>
 
-          {error && (
-            <p className="text-red-500 text-sm mt-3">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
 
           <button
             type="button"

@@ -7,6 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(ADMIN)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Category {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String
@@ -18,42 +34,72 @@ model Category {
   updatedAt DateTime  @updatedAt
 }
 
+model Shipping {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  nameBn    String
+  price     Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Product {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   title         String
   titleBn       String
-  slug          String   @unique
+  slug          String
   description   String?
   descriptionBn String?
   price         Int
   comparePrice  Int?
   discount      Int?
   images        String[]
-  sizes         String[]
+  variants      Json     @default("[]")
+  unit          String   @default("piece")
+  stock         Int      @default(0)
   categoryId    String   @db.ObjectId
   category      Category @relation(fields: [categoryId], references: [id])
+  shippingFree  Boolean  @default(false)
   featured      Boolean  @default(false)
   inStock       Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@unique([categoryId, slug])
 }
 
 model Order {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderNumber String   @unique
-  fullName    String
-  phone       String
-  address     String
-  city        String
-  district    String?
-  note        String?
-  items       Json
-  subtotal    Int
-  shipping    Int      @default(120)
-  total       Int
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber            String   @unique
+  fullName               String
+  email                  String?
+  phone                  String
+  address                String
+  city                   String
+  district               String?
+  note                   String?
+  items                  Json
+  subtotal               Int
+  shipping               Int      @default(120)
+  total                  Int
+  status                 String   @default("pending")
+  isCustom               Boolean  @default(false)
+  steadfastConsignmentId String?
+  steadfastTrackingCode  String?
+  clientIp               String?
+  stockDeducted          Boolean  @default(false)
+  stockRestored          Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model BlockedIp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ip        String   @unique
+  reason    String?
+  orderId   String?  @db.ObjectId
+  createdAt DateTime @default(now())
 }
 
 model Banner {
@@ -67,4 +113,68 @@ model Banner {
   order      Int      @default(0)
   active     Boolean  @default(true)
   createdAt  DateTime @default(now())
+}
+
+model Settings {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  siteName             String   @default("Mosafa Mart")
+  tagline              String?
+  description          String?
+  footerText           String?
+  phone                String?
+  whatsapp             String?
+  messenger            String?
+  logo                 String?
+  shippingInsideDhaka  Int      @default(80)
+  shippingOutsideDhaka Int      @default(120)
+  updatedAt            DateTime @updatedAt
+}
+
+model StockMovement {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String   @db.ObjectId
+  productName String
+  variantId   String?
+  variantName String?
+  type        String
+  direction   String
+  quantity    Int
+  stockBefore Int
+  stockAfter  Int
+  unit        String
+  note        String?
+  orderId     String?  @db.ObjectId
+  returnId    String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+}
+
+model ProductReturn {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  returnNumber String   @unique
+  orderId      String?  @db.ObjectId
+  orderNumber  String?
+  productId    String   @db.ObjectId
+  productName  String
+  variantId    String?
+  variantName  String?
+  quantity     Int
+  unit         String
+  reason       String?
+  status       String   @default("pending")
+  refundAmount Int      @default(0)
+  note         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Expense {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  titleBn   String?
+  category  String   @default("other")
+  amount    Int
+  note      String?
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

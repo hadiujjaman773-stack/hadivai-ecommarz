@@ -51,10 +51,7 @@ export function HeroSlider({ banners }: { banners: BannerItem[] }) {
                       </span>
                     </div>
                   )}
-                  <h1
-                    className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
-                    style={{ color: "rgb(252, 137, 52)" }}
-                  >
+                  <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-[var(--accent-color)]">
                     {banner.heading ?? banner.titleBn}
                   </h1>
                   <p
@@ -66,11 +63,7 @@ export function HeroSlider({ banners }: { banners: BannerItem[] }) {
                   {banner.link && (
                     <Link
                       href={banner.link}
-                      className="inline-block px-8 py-4 font-semibold transition-all duration-300 shadow-lg rounded-sm"
-                      style={{
-                        color: "rgb(255, 255, 255)",
-                        backgroundColor: "rgb(252, 137, 52)",
-                      }}
+                      className="inline-block px-8 py-4 font-semibold transition-all duration-300 shadow-lg rounded-sm btn-primary"
                     >
                       অর্ডার করুন
                     </Link>
