@@ -7,8 +7,6 @@ import Image from "next/image";
 import { ShoppingCart, X, Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, formatPriceWithUnit } from "@/lib/format";
-import { getProductPath } from "@/lib/product-url";
-import { PRODUCTS } from "@/data/seed-data";
 
 export function CartSidebar() {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
@@ -25,12 +23,6 @@ export function CartSidebar() {
   useEffect(() => {
     setPortalRoot(document.body);
   }, []);
-
-  const cartSlugs = new Set(items.map((i) => i.slug));
-  const suggestions = PRODUCTS.filter((p) => !cartSlugs.has(p.slug)).slice(
-    0,
-    5
-  );
 
   if (!portalRoot || !isOpen) return null;
 
@@ -162,39 +154,6 @@ export function CartSidebar() {
             ))
           )}
 
-          {items.length > 0 && suggestions.length > 0 && (
-            <div className="pt-2">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                আপনার পছন্দ হতে পারে
-              </h3>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {suggestions.map((product) => (
-                  <Link
-                    key={product.slug}
-                    href={getProductPath({
-                      slug: product.slug,
-                      category: { slug: product.categorySlug },
-                    })}
-                    className="min-w-[200px] max-w-[200px] border border-gray-200 rounded-lg p-3 hover:shadow-sm flex-shrink-0"
-                    onClick={closeCart}
-                  >
-                    <div className="w-full h-28 rounded-md overflow-hidden bg-gray-50 border border-gray-100 mb-2 relative">
-                      <Image
-                        src={product.images[0]}
-                        alt={product.titleBn}
-                        fill
-                        className="object-cover"
-                        sizes="200px"
-                      />
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {product.titleBn}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {items.length > 0 && (

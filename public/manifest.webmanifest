@@ -1,0 +1,20 @@
+{
+  "name": "Satkhira Modhu Shop",
+  "short_name": "SMS",
+  "description": "সাতক্ষীরার খাঁটি মধুর বিশ্বস্ত অনলাইন দোকান",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1b4332",
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

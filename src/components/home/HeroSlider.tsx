@@ -22,9 +22,9 @@ export function HeroSlider({ banners }: { banners: BannerItem[] }) {
         pagination={{ clickable: true }}
         navigation
         loop
-        className="hero-swiper swiper-horizontal h-[480px] md:h-[560px] lg:h-[600px]"
+        className="hero-swiper swiper-horizontal h-[280px] sm:h-[400px] md:h-[480px] lg:h-[520px]"
       >
-        {banners.map((banner) => (
+        {banners.map((banner, index) => (
           <SwiperSlide key={banner.id}>
             <div className="relative h-full">
               <div className="absolute inset-0">
@@ -33,8 +33,9 @@ export function HeroSlider({ banners }: { banners: BannerItem[] }) {
                   alt={banner.titleBn}
                   fill
                   className="object-cover"
-                  priority
+                  priority={index === 0}
                   sizes="100vw"
+                  loading={index === 0 ? undefined : "lazy"}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               </div>
@@ -51,7 +52,7 @@ export function HeroSlider({ banners }: { banners: BannerItem[] }) {
                       </span>
                     </div>
                   )}
-                  <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-[var(--accent-color)]">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-[var(--accent-color)]">
                     {banner.heading ?? banner.titleBn}
                   </h1>
                   <p

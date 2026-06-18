@@ -43,11 +43,7 @@ export function ProductGrid({
     <>
       {title && heading}
       <div
-        className={`grid ${
-          bare && !isRelated
-            ? "grid-cols-2 sm:grid-cols-2"
-            : "grid-cols-1 sm:grid-cols-2"
-        } lg:grid-cols-4 gap-3 md:gap-6 w-full`}
+        className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full`}
       >
         {products.map((product) => (
           <ProductCard
@@ -69,8 +65,8 @@ export function ProductGrid({
 
   const sectionClass =
     variant === "popular"
-      ? "py-20 bg-white"
-      : "py-6 md:py-14 lg:py-20 bg-white";
+      ? "py-10 sm:py-16 lg:py-20 bg-white"
+      : "py-6 md:py-12 lg:py-16 bg-white";
 
   return (
     <section className={sectionClass}>

@@ -1,28 +1,39 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Baloo_Da_2 } from "next/font/google";
 import "./globals.css";
-import { TopBar } from "@/components/layout/TopBar";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { FloatingButtons } from "@/components/layout/FloatingButtons";
-import { CartSidebar } from "@/components/cart/CartSidebar";
-import { CartProvider } from "@/lib/cart-context";
 import { SITE } from "@/data/seed-data";
 
 const baloo = Baloo_Da_2({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
   display: "swap",
-  fallback: ["Arial"],
+  fallback: ["system-ui", "Arial"],
   adjustFontFallback: true,
+  preload: true,
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#1b4332",
+};
 
 export const metadata: Metadata = {
   title: `${SITE.name} | ${SITE.tagline}`,
   description: SITE.description,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: SITE.shortName,
+  },
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
+  },
+  formatDetection: {
+    telephone: true,
   },
 };
 
@@ -33,15 +44,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bn" dir="ltr" className={baloo.className}>
-      <body className="min-h-screen flex flex-col antialiased bg-white text-gray-900">
-        <CartProvider>
-          <TopBar />
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <FloatingButtons />
-          <CartSidebar />
-        </CartProvider>
+      <body className="min-h-screen antialiased bg-white text-gray-900">
+        {children}
       </body>
     </html>
   );

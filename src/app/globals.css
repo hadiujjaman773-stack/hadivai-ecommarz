@@ -176,19 +176,23 @@
 }
 
 .wa-btn {
-  animation: waPulse 2.8s ease-in-out infinite;
   position: relative;
 }
-.wa-btn::after {
-  content: "";
-  border-radius: 9999px;
-  animation: waRing 2.8s ease-out infinite;
-  position: absolute;
-  inset: -4px;
-  box-shadow: 0 0 #22c55e8c;
-}
-.call-btn {
-  animation: callPulse 2.8s ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .wa-btn {
+    animation: waPulse 2.8s ease-in-out infinite;
+  }
+  .wa-btn::after {
+    content: "";
+    border-radius: 9999px;
+    animation: waRing 2.8s ease-out infinite;
+    position: absolute;
+    inset: -4px;
+    box-shadow: 0 0 #22c55e8c;
+  }
+  .call-btn {
+    animation: callPulse 2.8s ease-in-out infinite;
+  }
 }
 
 @keyframes waPulse {
@@ -292,4 +296,15 @@
 
 .rich-content li {
   margin-bottom: 0.35rem;
+}
+
+.product-card-shell {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 360px;
+}
+
+@media (max-width: 640px) {
+  .cart-drawer {
+    max-width: 100%;
+  }
 }

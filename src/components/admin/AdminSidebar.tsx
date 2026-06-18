@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Warehouse,
+  X,
 } from "lucide-react";
 import { SITE } from "@/data/seed-data";
 
@@ -35,11 +36,15 @@ const navItems = [
 interface AdminSidebarProps {
   userRole: string;
   inventoryEnabled?: boolean;
+  mobileOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function AdminSidebar({
   userRole,
   inventoryEnabled = true,
+  mobileOpen = false,
+  onClose,
 }: AdminSidebarProps) {
   const pathname = usePathname();
 
@@ -48,52 +53,69 @@ export function AdminSidebar({
     window.location.href = "/admin/login";
   };
 
+  const links = navItems.filter(
+    (item) =>
+      (!item.superAdminOnly || userRole === "SUPER_ADMIN") &&
+      (!("inventoryOnly" in item && item.inventoryOnly) || inventoryEnabled)
+  );
+
   return (
-    <aside className="w-64 footer-brand text-white min-h-screen flex flex-col shrink-0">
-      <div className="p-5 border-b border-white/10">
-        <Link href="/admin/dashboard" className="flex items-center gap-3">
+    <aside
+      className={`fixed lg:static inset-y-0 left-0 z-50 w-64 footer-brand text-white min-h-screen flex flex-col shrink-0 transform transition-transform duration-200 ease-out lg:translate-x-0 ${
+        mobileOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
+      <div className="p-4 sm:p-5 border-b border-white/10 flex items-start justify-between gap-2">
+        <Link
+          href="/admin/dashboard"
+          className="flex items-center gap-3 min-w-0"
+          onClick={onClose}
+        >
           <Image
             src={SITE.logo}
             alt={SITE.name}
-            width={48}
-            height={48}
-            className="h-12 w-12 object-contain"
+            width={44}
+            height={44}
+            className="h-11 w-11 object-contain shrink-0"
           />
-          <div>
-            <p className="text-sm font-bold text-[var(--accent-color)] leading-tight">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[var(--accent-color)] leading-tight truncate">
               Admin Panel
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">{SITE.name}</p>
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{SITE.name}</p>
           </div>
         </Link>
+        <button
+          type="button"
+          className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 shrink-0"
+          aria-label="বন্ধ"
+          onClick={onClose}
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
-        {navItems
-          .filter(
-            (item) =>
-              (!item.superAdminOnly || userRole === "SUPER_ADMIN") &&
-              (!("inventoryOnly" in item && item.inventoryOnly) || inventoryEnabled)
-          )
-          .map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(item.href + "/");
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-[var(--accent-color)] text-[var(--brand-green-dark)] font-semibold"
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </Link>
-            );
-          })}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {links.map((item) => {
+          const active =
+            pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                active
+                  ? "bg-[var(--accent-color)] text-[var(--brand-green-dark)] font-semibold"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="p-3 border-t border-white/10">
