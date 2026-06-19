@@ -4,6 +4,8 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { getCategoryBySlug, getProducts } from "@/lib/data";
 import { SITE } from "@/data/seed-data";
 
+export const revalidate = 120;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }

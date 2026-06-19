@@ -8,6 +8,7 @@ import {
 } from "@/lib/product-units";
 import { parseVariants } from "@/lib/product-variants";
 import { syncProductStockFields } from "@/lib/inventory";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -89,6 +90,7 @@ export async function PUT(request: Request, { params }: Params) {
       },
       include: { category: true },
     });
+    revalidateStoreCache("products");
     return NextResponse.json(product);
   });
 }
@@ -97,6 +99,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   return withAuth(async () => {
     const { id } = await params;
     await prisma.product.delete({ where: { id } });
+    revalidateStoreCache("products");
     return NextResponse.json({ success: true });
   });
 }

@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client"],
   poweredByHeader: false,
   compress: true,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "swiper"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200],

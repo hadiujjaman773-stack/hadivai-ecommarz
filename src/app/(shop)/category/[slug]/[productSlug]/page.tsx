@@ -6,6 +6,8 @@ import { getProductByPath, getProducts } from "@/lib/data";
 import { getProductPath } from "@/lib/product-url";
 import { SITE } from "@/data/seed-data";
 
+export const revalidate = 120;
+
 interface Props {
   params: Promise<{ slug: string; productSlug: string }>;
 }

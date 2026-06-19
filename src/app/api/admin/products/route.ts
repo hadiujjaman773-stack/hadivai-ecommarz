@@ -9,6 +9,7 @@ import {
 import { parseVariants } from "@/lib/product-variants";
 import { syncProductStockFields } from "@/lib/inventory";
 import { paginateArray, parsePaginationParams } from "@/lib/pagination";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 function filterProducts(
   products: Array<{ title: string; titleBn: string; slug: string }>,
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
       },
       include: { category: true },
     });
+    revalidateStoreCache("products");
     return NextResponse.json(product, { status: 201 });
   });
 }

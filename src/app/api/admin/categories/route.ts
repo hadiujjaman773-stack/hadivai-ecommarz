@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth, jsonError } from "@/lib/admin-api";
 import { paginateArray, parsePaginationParams } from "@/lib/pagination";
 import { slugify } from "@/lib/slug";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 function filterBySearch<
   T extends { name: string; nameBn: string; slug: string },
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     const category = await prisma.category.create({
       data: { name, nameBn, slug: finalSlug, image: image || null },
     });
+    revalidateStoreCache("categories");
     return NextResponse.json(category, { status: 201 });
   });
 }

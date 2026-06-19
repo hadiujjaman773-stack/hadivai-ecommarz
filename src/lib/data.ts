@@ -1,9 +1,20 @@
+import { unstable_cache } from "next/cache";
+import {
+  getBannersFromDb,
+  getCategoriesFromDb,
+  getCategoryFromDb,
+  getProductFromDb,
+  getProductFromDbByPath,
+  getProductsFromDb,
+} from "./db";
 import {
   BANNERS,
   CATEGORIES,
   PRODUCTS,
 } from "@/data/seed-data";
 import type { BannerItem, CategoryItem, ProductWithCategory } from "@/types";
+
+export const CACHE_REVALIDATE = 120;
 
 function staticProducts(): ProductWithCategory[] {
   return PRODUCTS.map((p, idx) => {
@@ -69,53 +80,66 @@ function staticBanners(): BannerItem[] {
   }));
 }
 
-async function getDb() {
-  try {
-    const {
-      getProductsFromDb,
-      getCategoriesFromDb,
-      getBannersFromDb,
-      getCategoryFromDb,
-      getProductFromDb,
-      getProductFromDbByPath,
-    } = await import("./db");
-    return {
-      getProductsFromDb,
-      getCategoriesFromDb,
-      getBannersFromDb,
-      getCategoryFromDb,
-      getProductFromDb,
-      getProductFromDbByPath,
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function getCategories(): Promise<CategoryItem[]> {
-  const db = await getDb();
-  if (db) {
+const getCachedCategories = unstable_cache(
+  async () => {
     try {
-      const cats = await db.getCategoriesFromDb();
+      const cats = await getCategoriesFromDb();
       if (cats.length > 0) return cats;
     } catch {
       /* fallback */
     }
-  }
-  return staticCategories();
-}
+    return staticCategories();
+  },
+  ["store-categories"],
+  { revalidate: CACHE_REVALIDATE, tags: ["categories"] }
+);
 
-export async function getCategoryBySlug(slug: string) {
-  const db = await getDb();
-  if (db) {
+const getCachedBanners = unstable_cache(
+  async () => {
     try {
-      const cat = await db.getCategoryFromDb(slug);
-      if (cat) return cat;
+      const banners = await getBannersFromDb();
+      if (banners.length > 0) return banners;
     } catch {
       /* fallback */
     }
-  }
-  return staticCategories().find((c) => c.slug === slug) ?? null;
+    return staticBanners();
+  },
+  ["store-banners"],
+  { revalidate: CACHE_REVALIDATE, tags: ["banners"] }
+);
+
+const getCachedAllProducts = unstable_cache(
+  async () => {
+    try {
+      const products = await getProductsFromDb();
+      if (products.length > 0) return products;
+    } catch {
+      /* fallback */
+    }
+    return staticProducts();
+  },
+  ["store-products-all"],
+  { revalidate: CACHE_REVALIDATE, tags: ["products"] }
+);
+
+export async function getCategories(): Promise<CategoryItem[]> {
+  return getCachedCategories();
+}
+
+export async function getCategoryBySlug(slug: string) {
+  return unstable_cache(
+    async () => {
+      try {
+        const cat = await getCategoryFromDb(slug);
+        if (cat) return cat;
+      } catch {
+        /* fallback */
+      }
+      return staticCategories().find((c) => c.slug === slug) ?? null;
+    },
+    [`store-category-${slug}`],
+    { revalidate: CACHE_REVALIDATE, tags: ["categories", `category-${slug}`] }
+  )();
 }
 
 export async function getProducts(options?: {
@@ -123,82 +147,71 @@ export async function getProducts(options?: {
   featured?: boolean;
   limit?: number;
 }): Promise<ProductWithCategory[]> {
-  const db = await getDb();
-  if (db) {
-    try {
-      const products = await db.getProductsFromDb(options);
-      if (products.length > 0) {
-        let list = products;
-        if (options?.limit) list = list.slice(0, options.limit);
-        return list;
-      }
-    } catch {
-      /* fallback */
-    }
-  }
+  let list = await getCachedAllProducts();
 
-  let list = staticProducts();
   if (options?.categorySlug) {
     list = list.filter((p) => p.category.slug === options.categorySlug);
   }
   if (options?.featured) {
     list = list.filter((p) => p.featured);
   }
-  if (options?.limit) list = list.slice(0, options.limit);
+  if (options?.limit) {
+    list = list.slice(0, options.limit);
+  }
   return list;
 }
 
 export async function getProductBySlug(
   slug: string
 ): Promise<ProductWithCategory | null> {
-  const db = await getDb();
-  if (db) {
-    try {
-      const product = await db.getProductFromDb(slug);
-      if (product) return product;
-    } catch {
-      /* fallback */
-    }
-  }
-  return staticProducts().find((p) => p.slug === slug) ?? null;
+  return unstable_cache(
+    async () => {
+      try {
+        const product = await getProductFromDb(slug);
+        if (product) return product;
+      } catch {
+        /* fallback */
+      }
+      return staticProducts().find((p) => p.slug === slug) ?? null;
+    },
+    [`store-product-${slug}`],
+    { revalidate: CACHE_REVALIDATE, tags: ["products", `product-${slug}`] }
+  )();
 }
 
 export async function getProductByPath(
   categorySlug: string,
   productSlug: string
 ): Promise<ProductWithCategory | null> {
-  const db = await getDb();
-  if (db) {
-    try {
-      const product = await db.getProductFromDbByPath(
-        categorySlug,
-        productSlug
+  return unstable_cache(
+    async () => {
+      try {
+        const product = await getProductFromDbByPath(
+          categorySlug,
+          productSlug
+        );
+        if (product) return product;
+      } catch {
+        /* fallback */
+      }
+      return (
+        staticProducts().find(
+          (p) => p.slug === productSlug && p.category.slug === categorySlug
+        ) ??
+        staticProducts().find((p) => p.slug === productSlug) ??
+        null
       );
-      if (product) return product;
-    } catch {
-      /* fallback */
+    },
+    [`store-product-${categorySlug}-${productSlug}`],
+    {
+      revalidate: CACHE_REVALIDATE,
+      tags: ["products", `product-${productSlug}`],
     }
-  }
-  return (
-    staticProducts().find(
-      (p) => p.slug === productSlug && p.category.slug === categorySlug
-    ) ??
-    staticProducts().find((p) => p.slug === productSlug) ??
-    null
-  );
+  )();
 }
 
 export async function getBanners(): Promise<BannerItem[]> {
-  const db = await getDb();
-  if (db) {
-    try {
-      const banners = await db.getBannersFromDb();
-      if (banners.length > 0) return banners;
-    } catch {
-      /* fallback */
-    }
-  }
-  return staticBanners();
+  return getCachedBanners();
 }
 
 export async function createOrder(data: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, jsonError } from "@/lib/admin-api";
 import { slugify } from "@/lib/slug";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,6 +24,7 @@ export async function PUT(request: Request, { params }: Params) {
       where: { id },
       data: { name, nameBn, slug: finalSlug, image: image || null },
     });
+    revalidateStoreCache("categories");
     return NextResponse.json(category);
   });
 }
@@ -35,6 +37,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       return jsonError("এই ক্যাটাগরিতে পণ্য আছে, মুছা যাবে না");
     }
     await prisma.category.delete({ where: { id } });
+    revalidateStoreCache("categories");
     return NextResponse.json({ success: true });
   });
 }
