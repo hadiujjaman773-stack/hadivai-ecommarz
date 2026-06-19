@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import {
+  getDefaultAdminEmail,
+  getDefaultAdminPassword,
+} from "../src/lib/bootstrap-admin";
+import {
   BANNERS,
   CATEGORIES,
   PRODUCTS,
@@ -119,10 +123,11 @@ async function main() {
     },
   });
 
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminPassword = getDefaultAdminPassword();
+  const adminEmail = getDefaultAdminEmail();
   await prisma.user.create({
     data: {
-      email: "admin@mosafamart.com",
+      email: adminEmail,
       passwordHash: await bcrypt.hash(adminPassword, 12),
       name: "Super Admin",
       role: "SUPER_ADMIN",
@@ -130,7 +135,7 @@ async function main() {
   });
 
   console.log("Seed completed!");
-  console.log(`Admin login: admin@mosafamart.com / ${adminPassword}`);
+  console.log(`Admin login: ${adminEmail} / ${adminPassword}`);
   console.log(`Shipping options: ${shippingInside.nameBn}, ${shippingOutside.nameBn}`);
 }
 

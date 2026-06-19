@@ -31,7 +31,12 @@ export function SignInForm() {
         return;
       }
 
-      router.push("/admin/dashboard");
+      const role = data.user?.role;
+      router.push(
+        role === "SUPER_ADMIN" || role === "ADMIN"
+          ? "/admin/dashboard"
+          : "/"
+      );
       router.refresh();
     } catch {
       setError("লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");

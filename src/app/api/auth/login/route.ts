@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSession, loginUser } from "@/lib/auth";
+import { ensureDefaultAdmin } from "@/lib/bootstrap-admin";
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +12,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    await ensureDefaultAdmin();
 
     const user = await loginUser(email.trim().toLowerCase(), password);
     if (!user) {
