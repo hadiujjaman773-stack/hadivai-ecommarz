@@ -14,35 +14,32 @@ import {
   LogOut,
   Warehouse,
   X,
+  Send,
+  type LucideIcon,
 } from "lucide-react";
 import { SITE } from "@/data/seed-data";
+import type { AdminNavIcon, AdminNavItem } from "@/lib/admin-nav";
 
-const navItems = [
-  { href: "/admin/dashboard", label: "ড্যাশবোর্ড", icon: LayoutDashboard },
-  { href: "/admin/categories", label: "ক্যাটাগরি", icon: FolderTree },
-  { href: "/admin/products", label: "পণ্য", icon: Package },
-  {
-    href: "/admin/inventory",
-    label: "ইনভেন্টরি",
-    icon: Warehouse,
-    inventoryOnly: true,
-  },
-  { href: "/admin/orders", label: "অর্ডার", icon: ShoppingCart },
-  { href: "/admin/shipping", label: "শিপিং", icon: Truck },
-  { href: "/admin/users", label: "ইউজার", icon: Users, superAdminOnly: true },
-  { href: "/admin/settings", label: "সেটিংস", icon: Settings },
-];
+const navIcons: Record<AdminNavIcon, LucideIcon> = {
+  "layout-dashboard": LayoutDashboard,
+  "folder-tree": FolderTree,
+  package: Package,
+  warehouse: Warehouse,
+  "shopping-cart": ShoppingCart,
+  send: Send,
+  truck: Truck,
+  users: Users,
+  settings: Settings,
+};
 
 interface AdminSidebarProps {
-  userRole: string;
-  inventoryEnabled?: boolean;
+  navLinks: AdminNavItem[];
   mobileOpen?: boolean;
   onClose?: () => void;
 }
 
 export function AdminSidebar({
-  userRole,
-  inventoryEnabled = true,
+  navLinks,
   mobileOpen = false,
   onClose,
 }: AdminSidebarProps) {
@@ -52,12 +49,6 @@ export function AdminSidebar({
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/admin/login";
   };
-
-  const links = navItems.filter(
-    (item) =>
-      (!item.superAdminOnly || userRole === "SUPER_ADMIN") &&
-      (!("inventoryOnly" in item && item.inventoryOnly) || inventoryEnabled)
-  );
 
   return (
     <aside
@@ -96,10 +87,10 @@ export function AdminSidebar({
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {links.map((item) => {
+        {navLinks.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
+          const Icon = navIcons[item.icon];
           return (
             <Link
               key={item.href}

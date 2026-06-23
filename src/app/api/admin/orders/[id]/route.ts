@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, jsonError } from "@/lib/admin-api";
 import { isValidOrderStatus, normalizeOrderStatus } from "@/lib/order-status";
-import {
-  buildSteadfastPayload,
-  createSteadfastOrder,
-} from "@/lib/steadfast";
+import { sendOrderToSteadfast } from "@/lib/steadfast.service";
 import {
   parseOrderItems,
   restoreStockForOrder,
@@ -96,19 +93,9 @@ export async function PATCH(request: Request, { params }: Params) {
 
     if (status === "courier" && sendToSteadfast) {
       try {
-        const payload = buildSteadfastPayload({
-          orderNumber: existing.orderNumber,
-          fullName: existing.fullName,
-          phone: existing.phone,
-          address: existing.address,
-          city: existing.city,
-          note: existing.note,
-          total: existing.total,
-          items: existing.items,
-        });
-        const result = await createSteadfastOrder(payload);
-        steadfastConsignmentId = String(result.consignment_id ?? "");
-        steadfastTrackingCode = result.tracking_code ?? "";
+        const updated = await sendOrderToSteadfast(existing.id);
+        steadfastConsignmentId = updated.steadfastConsignmentId;
+        steadfastTrackingCode = updated.steadfastTrackingCode;
       } catch (err) {
         return jsonError(
           err instanceof Error ? err.message : "Steadfast ত্রুটি",
@@ -145,6 +132,14 @@ export async function PATCH(request: Request, { params }: Params) {
         status: normalized,
         steadfastConsignmentId,
         steadfastTrackingCode,
+        ...(sendToSteadfast && steadfastConsignmentId
+          ? {
+              steadfastDeliveryStatus: "in_review",
+              steadfastLastError: null,
+              steadfastCreatedAt: new Date(),
+              steadfastSyncedAt: new Date(),
+            }
+          : {}),
         ...(shouldRestore ? { stockRestored: true } : {}),
       },
     });

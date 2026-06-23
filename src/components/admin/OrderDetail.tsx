@@ -7,13 +7,16 @@ import { StatusBadge } from "./StatusBadge";
 import { ConfirmModal } from "./ConfirmModal";
 import { useNotification } from "./NotificationProvider";
 import { formatPrice } from "@/lib/format";
+import { steadfastStatusLabelBn } from "@/lib/steadfast-status";
 import {
   ORDER_STATUSES,
   ORDER_STATUS_LABELS,
   normalizeOrderStatus,
 } from "@/lib/order-status";
-import { ArrowLeft, Ban, ShieldCheck, Pencil } from "lucide-react";
+import { ArrowLeft, Ban, ShieldCheck, Pencil, Send, RefreshCw } from "lucide-react";
 import { CustomOrderForm } from "./CustomOrderForm";
+import { OrderFraudPanel } from "./OrderFraudPanel";
+import { OrderFraudButton } from "./OrderFraudButton";
 
 interface OrderItem {
   titleBn: string;
@@ -41,6 +44,10 @@ interface Order {
   clientIp?: string | null;
   steadfastConsignmentId: string | null;
   steadfastTrackingCode: string | null;
+  steadfastDeliveryStatus: string | null;
+  steadfastLastError: string | null;
+  steadfastCreatedAt: string | Date | null;
+  steadfastSyncedAt: string | Date | null;
   createdAt: string | Date;
 }
 
@@ -58,6 +65,8 @@ export function OrderDetail({
   const [ipLoading, setIpLoading] = useState(false);
   const [showSteadfastModal, setShowSteadfastModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [steadfastLoading, setSteadfastLoading] = useState(false);
+  const [showFraudPanel, setShowFraudPanel] = useState(false);
   const { success, error, info } = useNotification();
 
   const applyStatus = async (status: string, sendToSteadfast = false) => {
@@ -132,6 +141,58 @@ export function OrderDetail({
 
   const handleSteadfastSkip = () => {
     if (pendingStatus) void applyStatus(pendingStatus, false);
+  };
+
+  const sendToSteadfast = async () => {
+    if (steadfastLoading || order.steadfastConsignmentId) return;
+    setSteadfastLoading(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/steadfast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        error("Steadfast ব্যর্থ", data.error);
+        return;
+      }
+      setOrder((prev) => ({ ...prev, ...data }));
+      success(
+        "Steadfast-এ পাঠানো হয়েছে",
+        data.steadfastTrackingCode
+          ? `ট্র্যাকিং: ${data.steadfastTrackingCode}`
+          : undefined
+      );
+    } catch {
+      error("Steadfast ব্যর্থ", "নেটওয়ার্ক ত্রুটি");
+    } finally {
+      setSteadfastLoading(false);
+    }
+  };
+
+  const syncSteadfastStatus = async () => {
+    if (steadfastLoading || !order.steadfastConsignmentId) return;
+    setSteadfastLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/orders/${order.id}/steadfast/status`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        error("স্ট্যাটাস সিঙ্ক ব্যর্থ", data.error);
+        return;
+      }
+      setOrder((prev) => ({ ...prev, ...data }));
+      success(
+        "ডেলিভারি স্ট্যাটাস আপডেট",
+        steadfastStatusLabelBn(data.steadfastDeliveryStatus)
+      );
+    } catch {
+      error("স্ট্যাটাস সিঙ্ক ব্যর্থ", "নেটওয়ার্ক ত্রুটি");
+    } finally {
+      setSteadfastLoading(false);
+    }
   };
 
   const toggleIpBlock = async () => {
@@ -279,6 +340,13 @@ export function OrderDetail({
         onCancel={handleSteadfastSkip}
       />
 
+      <OrderFraudPanel
+        orderId={order.id}
+        phone={order.phone}
+        active={showFraudPanel}
+        onClose={() => setShowFraudPanel(false)}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -326,7 +394,10 @@ export function OrderDetail({
               </div>
               <div>
                 <dt className="text-gray-500">ফোন</dt>
-                <dd>{order.phone}</dd>
+                <dd className="flex flex-wrap items-center gap-2">
+                  <span>{order.phone}</span>
+                  <OrderFraudButton onClick={() => setShowFraudPanel(true)} />
+                </dd>
               </div>
               {order.email && (
                 <div>
@@ -396,9 +467,34 @@ export function OrderDetail({
             </dl>
           </div>
 
-          {order.steadfastTrackingCode && (
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
-              <h2 className="font-semibold text-purple-900 mb-2">Steadfast</h2>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h2 className="font-semibold text-purple-900">Steadfast কুরিয়ার</h2>
+              {!order.steadfastConsignmentId ? (
+                <button
+                  type="button"
+                  onClick={() => void sendToSteadfast()}
+                  disabled={steadfastLoading}
+                  className="btn-primary px-3 py-1.5 text-xs flex items-center gap-1"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {steadfastLoading ? "পাঠানো..." : "পাঠান"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void syncSteadfastStatus()}
+                  disabled={steadfastLoading}
+                  className="btn-outline px-3 py-1.5 text-xs flex items-center gap-1"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${steadfastLoading ? "animate-spin" : ""}`}
+                  />
+                  স্ট্যাটাস সিঙ্ক
+                </button>
+              )}
+            </div>
+            {order.steadfastTrackingCode ? (
               <dl className="text-sm space-y-1">
                 <div>
                   <dt className="text-purple-600">ট্র্যাকিং কোড</dt>
@@ -412,9 +508,32 @@ export function OrderDetail({
                     <dd>{order.steadfastConsignmentId}</dd>
                   </div>
                 )}
+                {order.steadfastDeliveryStatus && (
+                  <div>
+                    <dt className="text-purple-600">ডেলিভারি স্ট্যাটাস</dt>
+                    <dd className="font-medium">
+                      {steadfastStatusLabelBn(order.steadfastDeliveryStatus)}
+                    </dd>
+                  </div>
+                )}
+                {order.steadfastSyncedAt && (
+                  <div>
+                    <dt className="text-purple-600">সর্বশেষ সিঙ্ক</dt>
+                    <dd className="text-xs">
+                      {new Date(order.steadfastSyncedAt).toLocaleString("bn-BD")}
+                    </dd>
+                  </div>
+                )}
               </dl>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-purple-800">
+                এখনো Steadfast-এ পাঠানো হয়নি। উপরের বাটনে ক্লিক করুন।
+              </p>
+            )}
+            {order.steadfastLastError && (
+              <p className="text-xs text-red-600 mt-2">{order.steadfastLastError}</p>
+            )}
+          </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="font-semibold mb-4">স্ট্যাটাস আপডেট</h2>

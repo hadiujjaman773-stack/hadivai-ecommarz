@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AdminModal } from "./AdminModal";
 import { StatusBadge } from "./StatusBadge";
+import { OrderFraudPanel } from "./OrderFraudPanel";
+import { OrderFraudButton } from "./OrderFraudButton";
 import { formatPrice } from "@/lib/format";
 
 interface OrderItem {
@@ -38,7 +41,10 @@ interface OrderViewModalProps {
 }
 
 export function OrderViewModal({ order, onClose }: OrderViewModalProps) {
+  const [showFraudPanel, setShowFraudPanel] = useState(false);
+
   return (
+    <>
     <AdminModal title={`অর্ডার ${order.orderNumber}`} onClose={onClose} maxWidth="lg">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -60,7 +66,10 @@ export function OrderViewModal({ order, onClose }: OrderViewModalProps) {
           </div>
           <div>
             <p className="text-gray-500">ফোন</p>
-            <p>{order.phone}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p>{order.phone}</p>
+              <OrderFraudButton onClick={() => setShowFraudPanel(true)} />
+            </div>
           </div>
           {order.email && (
             <div>
@@ -128,5 +137,13 @@ export function OrderViewModal({ order, onClose }: OrderViewModalProps) {
         </Link>
       </div>
     </AdminModal>
+
+    <OrderFraudPanel
+      orderId={order.id}
+      phone={order.phone}
+      active={showFraudPanel}
+      onClose={() => setShowFraudPanel(false)}
+    />
+    </>
   );
 }

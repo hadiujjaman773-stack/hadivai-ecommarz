@@ -17,7 +17,7 @@ import {
   ORDER_STATUSES,
   ORDER_STATUS_LABELS,
 } from "@/lib/order-status";
-import { Plus, Eye, Pencil, Trash2, FileEdit, Calendar } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, FileEdit, Calendar, Send } from "lucide-react";
 
 interface Order {
   id: string;
@@ -27,6 +27,7 @@ interface Order {
   total: number;
   status: string;
   isCustom: boolean;
+  steadfastTrackingCode?: string | null;
   createdAt: string;
 }
 
@@ -52,6 +53,8 @@ export function OrderManager() {
     Parameters<typeof OrderViewModal>[0]["order"] | null
   >(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkSending, setBulkSending] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,6 +142,55 @@ export function OrderManager() {
     }
   };
 
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === orders.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(orders.map((o) => o.id));
+    }
+  };
+
+  const sendBulkToSteadfast = async () => {
+    if (selectedIds.length === 0) {
+      error("নির্বাচন করুন", "অন্তত একটি অর্ডার সিলেক্ট করুন");
+      return;
+    }
+    if (
+      !confirm(
+        `${selectedIds.length}টি অর্ডার Steadfast-এ পাঠাবেন?`
+      )
+    ) {
+      return;
+    }
+
+    setBulkSending(true);
+    try {
+      const res = await fetch("/api/admin/steadfast/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: selectedIds }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        error("Bulk Steadfast ব্যর্থ", data.error);
+        return;
+      }
+      success(data.message || "অর্ডার পাঠানো হয়েছে");
+      setSelectedIds([]);
+      load();
+    } catch {
+      error("Bulk Steadfast ব্যর্থ", "নেটওয়ার্ক ত্রুটি");
+    } finally {
+      setBulkSending(false);
+    }
+  };
+
   const toggleToday = () => {
     setTodayOnly((prev) => {
       const next = !prev;
@@ -193,6 +245,19 @@ export function OrderManager() {
       </SearchFilterBar>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-2 mb-4 items-start sm:items-center">
+        {selectedIds.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void sendBulkToSteadfast()}
+            disabled={bulkSending}
+            className="btn-primary px-3 py-2 text-sm flex items-center gap-1.5"
+          >
+            <Send className="w-4 h-4" />
+            {bulkSending
+              ? "পাঠানো হচ্ছে..."
+              : `Steadfast (${selectedIds.length})`}
+          </button>
+        )}
         <button
           type="button"
           onClick={toggleToday}
@@ -282,6 +347,17 @@ export function OrderManager() {
             <table className="w-full text-sm min-w-[800px]">
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
+                  <th className="px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        orders.length > 0 &&
+                        selectedIds.length === orders.length
+                      }
+                      onChange={toggleSelectAll}
+                      aria-label="সব সিলেক্ট"
+                    />
+                  </th>
                   <th className="text-left px-5 py-3">অর্ডার #</th>
                   <th className="text-left px-5 py-3">গ্রাহক</th>
                   <th className="text-left px-5 py-3">ফোন</th>
@@ -295,6 +371,14 @@ export function OrderManager() {
               <tbody className="divide-y divide-gray-100">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(order.id)}
+                        onChange={() => toggleSelection(order.id)}
+                        aria-label={`Select ${order.orderNumber}`}
+                      />
+                    </td>
                     <td className="px-5 py-3">
                       <Link
                         href={`/admin/orders/${order.id}`}

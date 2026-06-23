@@ -27,6 +27,10 @@ export default async function OrderDetailPage({ params }: Params) {
         isCustom: order.isCustom,
         steadfastConsignmentId: order.steadfastConsignmentId,
         steadfastTrackingCode: order.steadfastTrackingCode,
+        steadfastDeliveryStatus: order.steadfastDeliveryStatus,
+        steadfastLastError: order.steadfastLastError,
+        steadfastCreatedAt: order.steadfastCreatedAt,
+        steadfastSyncedAt: order.steadfastSyncedAt,
         items: order.items as {
           titleBn: string;
           price: number;

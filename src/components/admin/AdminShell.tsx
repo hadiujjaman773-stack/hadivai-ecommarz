@@ -1,20 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
+import type { AdminNavItem } from "@/lib/admin-nav";
 
 interface AdminShellProps {
   userRole: string;
   userName: string;
-  inventoryEnabled: boolean;
+  navLinks: AdminNavItem[];
   children: React.ReactNode;
 }
 
 export function AdminShell({
   userRole,
   userName,
-  inventoryEnabled,
+  navLinks,
   children,
 }: AdminShellProps) {
   const [open, setOpen] = useState(false);
@@ -31,8 +32,7 @@ export function AdminShell({
       )}
 
       <AdminSidebar
-        userRole={userRole}
-        inventoryEnabled={inventoryEnabled}
+        navLinks={navLinks}
         mobileOpen={open}
         onClose={() => setOpen(false)}
       />

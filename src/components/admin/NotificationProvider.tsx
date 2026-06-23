@@ -74,12 +74,29 @@ export function NotificationProvider({
     [remove]
   );
 
+  const success = useCallback(
+    (title: string, message?: string) => notify("success", title, message),
+    [notify]
+  );
+  const error = useCallback(
+    (title: string, message?: string) => notify("error", title, message),
+    [notify]
+  );
+  const info = useCallback(
+    (title: string, message?: string) => notify("info", title, message),
+    [notify]
+  );
+  const warning = useCallback(
+    (title: string, message?: string) => notify("warning", title, message),
+    [notify]
+  );
+
   const value: NotificationContextValue = {
     notify,
-    success: (title, message) => notify("success", title, message),
-    error: (title, message) => notify("error", title, message),
-    info: (title, message) => notify("info", title, message),
-    warning: (title, message) => notify("warning", title, message),
+    success,
+    error,
+    info,
+    warning,
   };
 
   return (

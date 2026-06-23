@@ -85,8 +85,12 @@ model Order {
   total                  Int
   status                 String   @default("pending")
   isCustom               Boolean  @default(false)
-  steadfastConsignmentId String?
-  steadfastTrackingCode  String?
+  steadfastConsignmentId   String?
+  steadfastTrackingCode    String?
+  steadfastDeliveryStatus  String?
+  steadfastLastError       String?
+  steadfastCreatedAt       DateTime?
+  steadfastSyncedAt        DateTime?
   clientIp               String?
   stockDeducted          Boolean  @default(false)
   stockRestored          Boolean  @default(false)
