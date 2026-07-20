@@ -106,6 +106,7 @@ async function main() {
         image: banner.image,
         link: banner.link,
         order: i,
+        isMain: i === 0,
       },
     });
   }

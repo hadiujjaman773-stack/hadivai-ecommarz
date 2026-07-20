@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "./PageHeader";
 import { ImageUploader } from "./ImageUploader";
+import { BannerManager } from "./BannerManager";
 import { useNotification } from "./NotificationProvider";
 
 interface Settings {
@@ -59,11 +60,13 @@ export function SettingsManager() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="সেটিংস"
         description="সাইটের সাধারণ তথ্য ও কনফিগারেশন"
       />
+
+      <BannerManager />
 
       <form
         onSubmit={handleSave}

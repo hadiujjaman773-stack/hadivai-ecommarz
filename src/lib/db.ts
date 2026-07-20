@@ -131,12 +131,14 @@ export async function getProductFromDbByPath(
 export async function getBannersFromDb(): Promise<BannerItem[]> {
   const banners = await prisma.banner.findMany({
     where: { active: true },
-    orderBy: { order: "asc" },
+    orderBy: [{ isMain: "desc" }, { order: "asc" }, { createdAt: "asc" }],
   });
   return banners.map((b) => ({
     id: b.id,
     title: b.title,
     titleBn: b.titleBn,
+    heading: b.subtitle ?? b.titleBn,
+    eyebrow: b.titleBn,
     subtitle: b.subtitle,
     subtitleBn: b.subtitleBn,
     image: b.image,
