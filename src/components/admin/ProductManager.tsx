@@ -514,65 +514,147 @@ export function ProductManager() {
         ) : products.length === 0 ? (
           <p className="p-8 text-center text-gray-500">কোনো পণ্য নেই</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
-              <tr>
-                <th className="text-left px-5 py-3">পণ্য</th>
-                <th className="text-left px-5 py-3">ক্যাটাগরি</th>
-                <th className="text-left px-5 py-3">মূল্য / ইউনিট</th>
-                <th className="text-left px-5 py-3">স্টক</th>
-                <th className="text-left px-5 py-3">শিপিং</th>
-                <th className="text-right px-5 py-3">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+          <>
+            {/* Mobile: stacked cards — no horizontal scroll */}
+            <div className="md:hidden divide-y divide-gray-100">
               {products.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="px-5 py-3">
-                    <div className="font-medium">{p.titleBn}</div>
-                    <Link
-                      href={getProductPath({
-                        slug: p.slug,
-                        category: p.category,
-                      })}
-                      target="_blank"
-                      className="text-xs text-[var(--accent-color)] hover:underline"
-                    >
-                      দেখুন
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3">{p.category.nameBn}</td>
-                  <td className="px-5 py-3 font-medium">
-                    {formatPrice(p.price)}
-                    <span className="text-xs text-gray-500 block">
-                      / {getUnitLabel(p.unit)}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="font-medium">{p.stock ?? 0}</span>
-                    <span className="text-xs text-gray-500 block">
-                      {getUnitLabel(p.unit)}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    {p.shippingFree ? (
-                      <span className="text-green-600 text-xs">ফ্রি</span>
-                    ) : (
-                      <span className="text-xs text-gray-600">চার্জ</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <button onClick={() => openEdit(p.id)} className="p-1.5 text-gray-500 hover:text-[var(--accent-color)] inline-flex">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(p.id)} className="p-1.5 text-gray-500 hover:text-red-500 inline-flex ml-1">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
+                <div key={p.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 break-words">
+                        {p.titleBn}
+                      </div>
+                      <Link
+                        href={getProductPath({
+                          slug: p.slug,
+                          category: p.category,
+                        })}
+                        target="_blank"
+                        className="text-xs text-[var(--accent-color)] hover:underline"
+                      >
+                        দেখুন
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(p.id)}
+                        className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-[var(--accent-color)]"
+                        aria-label="সম্পাদনা"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(p.id)}
+                        className="p-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-500"
+                        aria-label="মুছুন"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div>
+                      <span className="text-xs text-gray-400 block">ক্যাটাগরি</span>
+                      {p.category.nameBn}
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400 block">মূল্য</span>
+                      {formatPrice(p.price)}
+                      <span className="text-xs text-gray-500">
+                        {" "}
+                        / {getUnitLabel(p.unit)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400 block">স্টক</span>
+                      {p.stock ?? 0} {getUnitLabel(p.unit)}
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400 block">শিপিং</span>
+                      {p.shippingFree ? (
+                        <span className="text-green-600">ফ্রি</span>
+                      ) : (
+                        <span>চার্জ</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="text-left px-5 py-3">পণ্য</th>
+                    <th className="text-left px-5 py-3">ক্যাটাগরি</th>
+                    <th className="text-left px-5 py-3">মূল্য / ইউনিট</th>
+                    <th className="text-left px-5 py-3">স্টক</th>
+                    <th className="text-left px-5 py-3">শিপিং</th>
+                    <th className="text-right px-5 py-3">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {products.map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3">
+                        <div className="font-medium">{p.titleBn}</div>
+                        <Link
+                          href={getProductPath({
+                            slug: p.slug,
+                            category: p.category,
+                          })}
+                          target="_blank"
+                          className="text-xs text-[var(--accent-color)] hover:underline"
+                        >
+                          দেখুন
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3">{p.category.nameBn}</td>
+                      <td className="px-5 py-3 font-medium">
+                        {formatPrice(p.price)}
+                        <span className="text-xs text-gray-500 block">
+                          / {getUnitLabel(p.unit)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="font-medium">{p.stock ?? 0}</span>
+                        <span className="text-xs text-gray-500 block">
+                          {getUnitLabel(p.unit)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {p.shippingFree ? (
+                          <span className="text-green-600 text-xs">ফ্রি</span>
+                        ) : (
+                          <span className="text-xs text-gray-600">চার্জ</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(p.id)}
+                          className="p-1.5 text-gray-500 hover:text-[var(--accent-color)] inline-flex"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(p.id)}
+                          className="p-1.5 text-gray-500 hover:text-red-500 inline-flex ml-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         <Pagination
           page={page}
