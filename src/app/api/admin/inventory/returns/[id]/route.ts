@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withInventoryAuth, jsonError } from "@/lib/admin-api";
 import { adjustProductStock } from "@/lib/inventory";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,6 +26,7 @@ export async function PUT(request: Request, { params }: Params) {
           returnId: existing.id,
           note: reason || existing.reason || "রিটার্ন অনুমোদিত",
         });
+        revalidateStoreCache("products");
       } catch (err) {
         return jsonError(
           err instanceof Error ? err.message : "স্টক আপডেট ব্যর্থ"

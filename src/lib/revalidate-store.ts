@@ -1,18 +1,53 @@
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
-export function revalidateStoreCache(
-  scope: "products" | "categories" | "banners" | "settings" | "all"
-) {
+type StoreCacheScope =
+  | "products"
+  | "categories"
+  | "banners"
+  | "settings"
+  | "all";
+
+function expireTag(tag: string) {
+  // Immediate expire so the next request waits for fresh data
+  // instead of serving stale-while-revalidate content.
+  revalidateTag(tag, { expire: 0 });
+}
+
+function revalidateShopPaths() {
+  // Shop layout wraps header/footer + all storefront pages.
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/category", "layout");
+  revalidatePath("/product", "layout");
+  revalidatePath("/contact-us");
+  revalidatePath("/about-us");
+}
+
+/**
+ * Invalidate storefront caches after admin CRUD.
+ * Uses immediate tag expiration + shop path revalidation.
+ */
+export function revalidateStoreCache(scope: StoreCacheScope) {
+  const tags = new Set<string>();
+
   if (scope === "all" || scope === "products") {
-    revalidateTag("products", "max");
+    tags.add("products");
+    tags.add("categories");
   }
   if (scope === "all" || scope === "categories") {
-    revalidateTag("categories", "max");
+    tags.add("categories");
+    tags.add("products");
   }
   if (scope === "all" || scope === "banners") {
-    revalidateTag("banners", "max");
+    tags.add("banners");
   }
   if (scope === "all" || scope === "settings") {
-    revalidateTag("settings", "max");
+    tags.add("settings");
   }
+
+  for (const tag of tags) {
+    expireTag(tag);
+  }
+
+  revalidateShopPaths();
 }

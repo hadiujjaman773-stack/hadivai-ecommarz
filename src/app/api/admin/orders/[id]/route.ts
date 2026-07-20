@@ -8,6 +8,7 @@ import {
   restoreStockForOrder,
 } from "@/lib/inventory";
 import { isInventoryEnabled } from "@/lib/feature-flags";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -118,6 +119,7 @@ export async function PATCH(request: Request, { params }: Params) {
           parseOrderItems(existing.items),
           normalized === "return" ? "return" : "cancel"
         );
+        revalidateStoreCache("products");
       } catch (err) {
         return jsonError(
           err instanceof Error ? err.message : "স্টক পুনরুদ্ধার ব্যর্থ",

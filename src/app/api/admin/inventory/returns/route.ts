@@ -6,6 +6,7 @@ import {
   generateReturnNumber,
 } from "@/lib/inventory";
 import { paginateArray, parsePaginationParams } from "@/lib/pagination";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 export async function GET(request: Request) {
   return withInventoryAuth(async () => {
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
           returnId: record.id,
           note: reason || "পণ্য রিটার্ন",
         });
+        revalidateStoreCache("products");
       } catch (err) {
         await prisma.productReturn.delete({ where: { id: record.id } });
         return jsonError(

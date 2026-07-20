@@ -7,6 +7,7 @@ import {
   type StockMovementType,
 } from "@/lib/inventory";
 import { paginateArray, parsePaginationParams } from "@/lib/pagination";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 export async function GET(request: Request) {
   return withInventoryAuth(async () => {
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
         type: type as StockMovementType,
         note,
       });
+      revalidateStoreCache("products");
       return NextResponse.json(result, { status: 201 });
     } catch (err) {
       return jsonError(err instanceof Error ? err.message : "স্টক আপডেট ব্যর্থ");
