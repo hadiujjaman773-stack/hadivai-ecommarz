@@ -8,9 +8,11 @@ export async function GET() {
     return NextResponse.json({
       mode,
       message:
-        mode === "cloudflare"
+        mode === "imgbb"
+          ? "ImgBB আপলোড সক্রিয়"
+          : mode === "cloudflare"
           ? "Cloudflare Images আপলোড সক্রিয়"
-          : "লোকাল আপলোড সক্রিয় (public/uploads)। Cloudflare-এ পাঠাতে .env-এ ACCOUNT_ID ও API_TOKEN যোগ করুন",
+          : "লোকাল আপলোড সক্রিয় (public/uploads)। ImgBB-তে পাঠাতে .env-এ IMGBB_API_KEY যোগ করুন",
     });
   });
 }

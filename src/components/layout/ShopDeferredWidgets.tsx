@@ -21,10 +21,18 @@ const PwaRegister = dynamic(
   { ssr: false }
 );
 
-export function ShopDeferredWidgets() {
+interface ShopDeferredWidgetsProps {
+  phone: string | null;
+  whatsapp: string | null;
+}
+
+export function ShopDeferredWidgets({
+  phone,
+  whatsapp,
+}: ShopDeferredWidgetsProps) {
   return (
     <>
-      <FloatingButtons />
+      <FloatingButtons phone={phone} whatsapp={whatsapp} />
       <CartSidebar />
       <PwaRegister />
     </>

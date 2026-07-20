@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/admin-api";
 import { SITE } from "@/data/seed-data";
+import { revalidateStoreCache } from "@/lib/revalidate-store";
 
 async function getOrCreateSettings() {
   let settings = await prisma.settings.findFirst();
@@ -14,6 +15,8 @@ async function getOrCreateSettings() {
         footerText: SITE.footerText,
         phone: SITE.phone,
         whatsapp: SITE.whatsapp,
+        email: SITE.email,
+        facebook: SITE.facebook,
         messenger: SITE.messenger,
         logo: SITE.logo,
         shippingInsideDhaka: SITE.shippingInsideDhaka,
@@ -45,6 +48,8 @@ export async function PUT(request: Request) {
         footerText: body.footerText ?? existing.footerText,
         phone: body.phone ?? existing.phone,
         whatsapp: body.whatsapp ?? existing.whatsapp,
+        email: body.email ?? existing.email,
+        facebook: body.facebook ?? existing.facebook,
         messenger: body.messenger ?? existing.messenger,
         logo: body.logo ?? existing.logo,
         shippingInsideDhaka:
@@ -53,6 +58,7 @@ export async function PUT(request: Request) {
           body.shippingOutsideDhaka ?? existing.shippingOutsideDhaka,
       },
     });
+    revalidateStoreCache("settings");
     return NextResponse.json(settings);
   });
 }

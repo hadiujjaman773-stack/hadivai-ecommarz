@@ -36,14 +36,18 @@ export function HeaderCartButton({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function HeaderSearch() {
+export function HeaderSearch({
+  defaultCategorySlug = "pure-honey",
+}: {
+  defaultCategorySlug?: string;
+}) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
   const handleSearch = () => {
     if (search.trim()) {
       router.push(
-        `/category/kitchen-item?q=${encodeURIComponent(search.trim())}`
+        `/category/${defaultCategorySlug}?q=${encodeURIComponent(search.trim())}`
       );
     }
   };

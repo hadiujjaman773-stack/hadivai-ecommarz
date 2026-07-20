@@ -1,11 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { User, Heart } from "lucide-react";
-import { SITE, NAV_CATEGORIES } from "@/data/seed-data";
+import { SITE } from "@/data/seed-data";
+import type { CategoryItem } from "@/types";
 import { HeaderCartButton, HeaderSearch } from "./HeaderClient";
 import { MobileHeaderActions } from "./MobileNav";
 
-export function Header() {
+interface HeaderProps {
+  categories: CategoryItem[];
+}
+
+export function Header({ categories }: HeaderProps) {
+  const defaultCategorySlug = categories[0]?.slug || "pure-honey";
+
   return (
     <header className="bg-white relative z-20">
       {/* Mobile */}
@@ -21,7 +28,7 @@ export function Header() {
               priority
             />
           </Link>
-          <MobileHeaderActions />
+          <MobileHeaderActions categories={categories} />
         </div>
       </div>
 
@@ -40,7 +47,7 @@ export function Header() {
               />
             </Link>
             <div className="justify-self-center w-full">
-              <HeaderSearch />
+              <HeaderSearch defaultCategorySlug={defaultCategorySlug} />
             </div>
             <div className="flex items-center justify-end gap-x-6">
               <Link
@@ -75,7 +82,7 @@ export function Header() {
             >
               হোম
             </Link>
-            {NAV_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/category/${cat.slug}`}

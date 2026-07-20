@@ -12,6 +12,8 @@ interface Settings {
   footerText: string | null;
   phone: string | null;
   whatsapp: string | null;
+  email: string | null;
+  facebook: string | null;
   messenger: string | null;
   logo: string | null;
   shippingInsideDhaka: number;
@@ -116,6 +118,25 @@ export function SettingsManager() {
               onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
             />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">ইমেইল</label>
+          <input
+            type="email"
+            className="input-field"
+            value={form.email || ""}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Facebook URL</label>
+          <input
+            type="url"
+            className="input-field"
+            placeholder="https://facebook.com/your-page"
+            value={form.facebook || ""}
+            onChange={(e) => setForm({ ...form, facebook: e.target.value })}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Messenger URL</label>

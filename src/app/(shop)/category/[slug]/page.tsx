@@ -26,7 +26,7 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <>
-      <CategoryHero nameBn={category.nameBn} slug={slug} />
+      <CategoryHero nameBn={category.nameBn} image={category.image} />
       <section className="py-16 bg-transparent">
         <ProductGrid products={products} bare />
       </section>

@@ -89,6 +89,8 @@ async function main() {
         categoryId,
         featured: product.featured,
         shippingFree: false,
+        inStock: product.inStock,
+        stock: 0,
       },
     });
   }
@@ -116,6 +118,8 @@ async function main() {
       footerText: SITE.footerText,
       phone: SITE.phone,
       whatsapp: SITE.whatsapp,
+      email: SITE.email,
+      facebook: SITE.facebook,
       messenger: SITE.messenger,
       logo: SITE.logo,
       shippingInsideDhaka: SITE.shippingInsideDhaka,

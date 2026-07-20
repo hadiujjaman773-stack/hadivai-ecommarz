@@ -44,7 +44,7 @@ function staticProducts(): ProductWithCategory[] {
       })),
       unit: "piece",
       featured: p.featured,
-      inStock: true,
+      inStock: p.inStock,
       shippingFree: false,
       category: {
         id: `cat-${cat.slug}`,
@@ -90,7 +90,7 @@ const getCachedCategories = unstable_cache(
     }
     return staticCategories();
   },
-  ["store-categories"],
+  ["store-categories-v2"],
   { revalidate: CACHE_REVALIDATE, tags: ["categories"] }
 );
 
@@ -118,7 +118,7 @@ const getCachedAllProducts = unstable_cache(
     }
     return staticProducts();
   },
-  ["store-products-all"],
+  ["store-products-all-v2"],
   { revalidate: CACHE_REVALIDATE, tags: ["products"] }
 );
 

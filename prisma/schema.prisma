@@ -127,6 +127,8 @@ model Settings {
   footerText           String?
   phone                String?
   whatsapp             String?
+  email                String?
+  facebook             String?
   messenger            String?
   logo                 String?
   shippingInsideDhaka  Int      @default(80)

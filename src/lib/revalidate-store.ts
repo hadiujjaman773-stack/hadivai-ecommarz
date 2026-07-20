@@ -1,6 +1,8 @@
 import { revalidateTag } from "next/cache";
 
-export function revalidateStoreCache(scope: "products" | "categories" | "banners" | "all") {
+export function revalidateStoreCache(
+  scope: "products" | "categories" | "banners" | "settings" | "all"
+) {
   if (scope === "all" || scope === "products") {
     revalidateTag("products", "max");
   }
@@ -9,5 +11,8 @@ export function revalidateStoreCache(scope: "products" | "categories" | "banners
   }
   if (scope === "all" || scope === "banners") {
     revalidateTag("banners", "max");
+  }
+  if (scope === "all" || scope === "settings") {
+    revalidateTag("settings", "max");
   }
 }

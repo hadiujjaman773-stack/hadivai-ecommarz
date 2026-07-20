@@ -4,6 +4,7 @@ import {
   isCloudflareUploadConfigured,
   uploadToCloudflareImages,
 } from "@/lib/cloudflare-images";
+import { isImgBbConfigured, uploadToImgBb } from "@/lib/imgbb";
 
 function safeFilename(name: string): string {
   const ext = path.extname(name).toLowerCase().replace(/[^a-z0-9.]/g, "");
@@ -32,20 +33,24 @@ export async function uploadToLocalStorage(file: File, filename: string) {
 export type UploadResult = {
   id: string;
   url: string;
-  provider: "cloudflare" | "local";
+  provider: "imgbb" | "cloudflare" | "local";
 };
 
-/** Cloudflare if configured, otherwise save to public/uploads */
+/** ImgBB first, then Cloudflare if configured, otherwise public/uploads. */
 export async function uploadImage(
   file: File,
   filename: string
 ): Promise<UploadResult> {
+  if (isImgBbConfigured()) {
+    return uploadToImgBb(file, filename);
+  }
   if (isCloudflareUploadConfigured()) {
     return uploadToCloudflareImages(file, filename);
   }
   return uploadToLocalStorage(file, filename);
 }
 
-export function getUploadMode(): "cloudflare" | "local" {
+export function getUploadMode(): "imgbb" | "cloudflare" | "local" {
+  if (isImgBbConfigured()) return "imgbb";
   return isCloudflareUploadConfigured() ? "cloudflare" : "local";
 }

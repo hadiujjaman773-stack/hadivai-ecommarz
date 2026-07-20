@@ -1,23 +1,24 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { CATEGORIES } from "@/data/seed-data";
 
 export function CategoryHero({
   nameBn,
-  slug,
+  image,
 }: {
   nameBn: string;
-  slug: string;
+  slug?: string;
+  image?: string | null;
 }) {
-  const cat = CATEGORIES.find((c) => c.slug === slug);
-  const heroImage =
-    (cat as { heroImage?: string })?.heroImage ?? cat?.image ?? "";
+  const heroImage = image || "";
 
   return (
     <section className="relative min-h-[320px] md:min-h-[400px]">
       <div
         className="absolute inset-0 bg-cover bg-center md:bg-fixed"
-        style={{ backgroundImage: heroImage ? `url("${heroImage}")` : undefined }}
+        style={{
+          backgroundImage: heroImage ? `url("${heroImage}")` : undefined,
+          backgroundColor: heroImage ? undefined : "#1f3d2b",
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative py-20">

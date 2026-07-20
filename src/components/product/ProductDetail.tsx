@@ -10,15 +10,6 @@ import { getUnitLabel } from "@/lib/product-units";
 import { useCart } from "@/lib/cart-context";
 import { SITE } from "@/data/seed-data";
 
-const PARENT_CATEGORIES: Record<string, string> = {
-  "bedside-tables": "আসবাবপত্র",
-  chairs: "আসবাবপত্র",
-  "office-desks": "আসবাবপত্র",
-  "bookcases-shelving": "আসবাবপত্র",
-  "show-rack": "আসবাবপত্র",
-  "media-tv-storage": "আসবাবপত্র",
-};
-
 function MessengerIcon() {
   return (
     <svg
@@ -102,12 +93,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
     router.push("/checkout");
   };
 
-  const parentCategory =
-    PARENT_CATEGORIES[product.category.slug] ?? product.category.nameBn;
-  const categoryLabel =
-    parentCategory !== product.category.nameBn
-      ? `${parentCategory}, ${product.category.nameBn}`
-      : product.category.nameBn;
+  const categoryLabel = product.category.nameBn;
 
   const summaryHtml =
     product.descriptionBn &&

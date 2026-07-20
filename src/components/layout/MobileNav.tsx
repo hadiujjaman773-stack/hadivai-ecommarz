@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { NAV_CATEGORIES } from "@/data/seed-data";
+import type { CategoryItem } from "@/types";
 import { HeaderCartButton } from "./HeaderClient";
 
-export function MobileNavToggle() {
+export function MobileNavToggle({
+  categories,
+}: {
+  categories: CategoryItem[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -29,7 +33,7 @@ export function MobileNavToggle() {
           >
             হোম
           </Link>
-          {NAV_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/category/${cat.slug}`}
@@ -46,11 +50,15 @@ export function MobileNavToggle() {
   );
 }
 
-export function MobileHeaderActions() {
+export function MobileHeaderActions({
+  categories,
+}: {
+  categories: CategoryItem[];
+}) {
   return (
     <div className="flex items-center gap-4 md:hidden">
       <HeaderCartButton compact />
-      <MobileNavToggle />
+      <MobileNavToggle categories={categories} />
     </div>
   );
 }
