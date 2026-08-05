@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { pushToDataLayer } from "@/lib/gtm";
 import type { ProductWithCategory } from "@/types";
 
 export function ProductCardActions({
@@ -45,14 +46,48 @@ export function ProductCardActions({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(buildCartPayload());
+    const payload = buildCartPayload();
+    addItem(payload);
+    
+    pushToDataLayer("add_to_cart", {
+      currency: "BDT",
+      value: payload.price,
+      items: [
+        {
+          item_id: payload.variantId ?? payload.productId,
+          item_name: payload.titleBn,
+          item_variant: payload.variantName,
+          price: payload.price,
+          item_category: payload.categorySlug,
+          quantity: 1,
+        },
+      ],
+    });
+    
     openCart();
   };
 
   const handleOrderNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(buildCartPayload());
+    const payload = buildCartPayload();
+    addItem(payload);
+    
+    pushToDataLayer("add_to_cart", {
+      currency: "BDT",
+      value: payload.price,
+      items: [
+        {
+          item_id: payload.variantId ?? payload.productId,
+          item_name: payload.titleBn,
+          item_variant: payload.variantName,
+          price: payload.price,
+          item_category: payload.categorySlug,
+          quantity: 1,
+        },
+      ],
+    });
+    
     router.push("/checkout");
   };
 

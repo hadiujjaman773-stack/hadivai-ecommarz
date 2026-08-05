@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, formatPriceWithUnit } from "@/lib/format";
 import { getUnitLabel } from "@/lib/product-units";
+import { pushToDataLayer } from "@/lib/gtm";
 import { SITE } from "@/data/seed-data";
 
 interface ShippingOption {
@@ -28,11 +29,34 @@ export function CheckoutForm() {
     null
   );
   const [showHelp, setShowHelp] = useState(false);
+  const checkoutTracked = useRef(false);
 
   const needsShipping = useMemo(
     () => items.some((item) => !item.shippingFree),
     [items]
   );
+
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const timer = setTimeout(() => {
+      pushToDataLayer("begin_checkout", {
+        currency: "BDT",
+        value: subtotal,
+        items: items.map(item => ({
+          item_id: item.variantId ?? item.productId,
+          item_name: item.titleBn,
+          item_variant: item.variantName,
+          price: item.price,
+          item_category: item.categorySlug,
+          quantity: item.quantity,
+        })),
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!needsShipping) {
@@ -133,6 +157,7 @@ export function CheckoutForm() {
       });
       if (!res.ok) throw new Error("অর্ডার জমা দিতে সমস্যা হয়েছে");
       const data = await res.json();
+      
       clearCart();
       router.push(`/order-success?order=${data.orderNumber}`);
     } catch (err) {

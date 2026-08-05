@@ -13,6 +13,7 @@
     "db:replace-catalog": "tsx prisma/replace-catalog.ts"
   },
   "dependencies": {
+    "@next/third-parties": "^16.3.0",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",

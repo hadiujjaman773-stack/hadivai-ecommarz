@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_Da_2 } from "next/font/google";
+import { GoogleTagManager } from "@next/third-parties/google";
 import "./globals.css";
 import { SITE } from "@/data/seed-data";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased bg-white text-gray-900">
         {children}
       </body>
+      <GoogleTagManager gtmId="GTM-PJSHQXGV" />
     </html>
   );
 }

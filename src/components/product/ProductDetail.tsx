@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, BadgePercent, Zap } from "lucide-react";
@@ -8,6 +8,7 @@ import type { ProductVariant, ProductWithCategory } from "@/types";
 import { formatPrice, formatPriceWithUnit, calcDiscount } from "@/lib/format";
 import { getUnitLabel } from "@/lib/product-units";
 import { useCart } from "@/lib/cart-context";
+import { pushToDataLayer } from "@/lib/gtm";
 import { SITE } from "@/data/seed-data";
 
 function MessengerIcon() {
@@ -68,6 +69,37 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
     setQuantity((q) => Math.min(Math.max(1, q), Math.max(1, availableStock)));
   }, [selectedVariant, availableStock]);
 
+  const viewTracked = useRef<{id: string | undefined, variant: string | undefined}>({id: undefined, variant: undefined});
+
+  useEffect(() => {
+    const currentId = selectedVariant ? selectedVariant.id : product.id;
+    const currentVariantName = selectedVariant?.nameBn;
+    
+    const timer = setTimeout(() => {
+      // Only fire if the product or variant actually changed
+      if (viewTracked.current.id !== currentId || viewTracked.current.variant !== currentVariantName) {
+        viewTracked.current = { id: currentId, variant: currentVariantName };
+        
+        pushToDataLayer("view_item", {
+        currency: "BDT",
+        value: activePrice,
+        items: [
+          {
+            item_id: currentId,
+            item_name: product.titleBn,
+            item_variant: currentVariantName,
+            price: activePrice,
+            item_category: product.category.nameBn,
+            quantity: 1,
+          },
+        ],
+      });
+    }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [product, selectedVariant, activePrice]);
+
   const handleOrder = () => {
     if (quantity > availableStock) {
       return;
@@ -90,6 +122,22 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
       },
       quantity
     );
+    
+    pushToDataLayer("add_to_cart", {
+      currency: "BDT",
+      value: activePrice * quantity,
+      items: [
+        {
+          item_id: selectedVariant ? selectedVariant.id : product.id,
+          item_name: product.titleBn,
+          item_variant: selectedVariant?.nameBn,
+          price: activePrice,
+          item_category: product.category.nameBn,
+          quantity: quantity,
+        },
+      ],
+    });
+
     router.push("/checkout");
   };
 

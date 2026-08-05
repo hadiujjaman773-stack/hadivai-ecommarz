@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { OrderSuccessTracker } from "@/components/checkout/OrderSuccessTracker";
 
 interface Props {
   searchParams: Promise<{ order?: string }>;
@@ -6,9 +8,20 @@ interface Props {
 
 export default async function OrderSuccessPage({ searchParams }: Props) {
   const { order } = await searchParams;
+  
+  let orderData = null;
+  if (order) {
+    orderData = await prisma.order.findUnique({
+      where: { orderNumber: order }
+    });
+  }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-16 text-center">
+    <>
+      {orderData && (
+        <OrderSuccessTracker order={orderData} />
+      )}
+      <div className="max-w-lg mx-auto px-4 py-16 text-center">
       <div className="bg-white rounded-xl border p-8 shadow-sm">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <span className="text-3xl">✓</span>
@@ -36,5 +49,6 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         </Link>
       </div>
     </div>
+    </>
   );
 }
