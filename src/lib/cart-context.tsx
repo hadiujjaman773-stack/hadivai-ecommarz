@@ -14,7 +14,11 @@ interface CartContextValue {
   items: CartItem[];
   isOpen: boolean;
   hydrated: boolean;
-  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
+  addItem: (
+    item: Omit<CartItem, "quantity">,
+    quantity?: number,
+    options?: { open?: boolean }
+  ) => void;
   removeItem: (productId: string, variantId?: string) => void;
   updateQuantity: (
     productId: string,
@@ -55,7 +59,12 @@ type CartAction =
   | { type: "HYDRATE"; items: CartItem[] }
   | { type: "OPEN" }
   | { type: "CLOSE" }
-  | { type: "ADD"; item: Omit<CartItem, "quantity">; quantity: number }
+  | {
+      type: "ADD";
+      item: Omit<CartItem, "quantity">;
+      quantity: number;
+      open?: boolean;
+    }
   | { type: "REMOVE"; productId: string; variantId?: string }
   | {
       type: "UPDATE_QTY";
@@ -103,7 +112,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "ADD":
       return {
         items: addToItems(state.items, action.item, action.quantity),
-        isOpen: true,
+        isOpen: action.open !== false,
         hydrated: state.hydrated,
       };
     case "REMOVE": {
@@ -175,8 +184,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const closeCart = useCallback(() => dispatch({ type: "CLOSE" }), []);
 
   const addItem = useCallback(
-    (item: Omit<CartItem, "quantity">, quantity = 1) => {
-      dispatch({ type: "ADD", item, quantity });
+    (
+      item: Omit<CartItem, "quantity">,
+      quantity = 1,
+      options?: { open?: boolean }
+    ) => {
+      dispatch({
+        type: "ADD",
+        item,
+        quantity,
+        open: options?.open,
+      });
     },
     []
   );

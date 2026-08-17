@@ -19,7 +19,7 @@ export function ProductCardActions({
   activeCompare?: number | null;
   compact?: boolean;
 }) {
-  const { addItem, openCart } = useCart();
+  const { addItem, openCart, closeCart } = useCart();
   const router = useRouter();
 
   const disabled =
@@ -71,7 +71,8 @@ export function ProductCardActions({
     e.preventDefault();
     e.stopPropagation();
     const payload = buildCartPayload();
-    addItem(payload);
+    addItem(payload, 1, { open: false });
+    closeCart();
     
     pushToDataLayer("add_to_cart", {
       currency: "BDT",

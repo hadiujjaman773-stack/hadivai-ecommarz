@@ -43,7 +43,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     product.variants[0] ?? null
   );
-  const { addItem } = useCart();
+  const { addItem, closeCart } = useCart();
   const router = useRouter();
 
   const activePrice = selectedVariant?.price ?? product.price;
@@ -120,7 +120,8 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
         shippingFree: product.shippingFree ?? false,
         unit: product.unit,
       },
-      quantity
+      quantity,
+      { open: false }
     );
     
     pushToDataLayer("add_to_cart", {
@@ -138,6 +139,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
       ],
     });
 
+    closeCart();
     router.push("/checkout");
   };
 
