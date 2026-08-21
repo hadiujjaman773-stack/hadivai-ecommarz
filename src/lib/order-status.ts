@@ -1,7 +1,7 @@
 export const ORDER_STATUSES = [
   "pending",
-  "order_confirm",
   "calling_stage",
+  "order_confirm",
   "packaging",
   "courier",
   "payment_done",
@@ -13,8 +13,8 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "অপেক্ষমাণ",
-  order_confirm: "অর্ডার কনফার্ম",
   calling_stage: "কলিং স্টেজ",
+  order_confirm: "অর্ডার কনফার্ম",
   packaging: "প্যাকেজিং",
   courier: "কুরিয়ার",
   payment_done: "পেমেন্ট ডান",
@@ -24,8 +24,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
-  order_confirm: "bg-teal-100 text-teal-800",
   calling_stage: "bg-orange-100 text-orange-800",
+  order_confirm: "bg-teal-100 text-teal-800",
   packaging: "bg-blue-100 text-blue-800",
   courier: "bg-purple-100 text-purple-800",
   payment_done: "bg-green-100 text-green-800",
