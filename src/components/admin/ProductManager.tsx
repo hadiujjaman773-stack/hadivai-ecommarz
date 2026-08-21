@@ -130,7 +130,7 @@ export function ProductManager() {
       variants: parseVariants(p.variants),
       unit: p.unit || DEFAULT_PRODUCT_UNIT,
       categoryId: p.categoryId,
-      shippingFree: p.shippingFree,
+      shippingFree: p.shippingFree === true,
       featured: p.featured,
       stock: String(p.stock ?? 0),
     });
@@ -470,17 +470,20 @@ export function ProductManager() {
                 )}
               </div>
 
-              <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="border rounded-lg p-4 bg-gray-50 space-y-2">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={!form.shippingFree}
+                    checked={form.shippingFree === true}
                     onChange={(e) =>
-                      setForm({ ...form, shippingFree: !e.target.checked })
+                      setForm({ ...form, shippingFree: e.target.checked })
                     }
                   />
-                  <span className="text-sm">শিপিং চার্জ প্রযোজ্য (আনটিক = ফ্রি শিপিং)</span>
+                  <span className="text-sm font-medium">ফ্রি শিপিং</span>
                 </label>
+                <p className="text-xs text-gray-500">
+                  টিক দিলে চেকআউটে এই পণ্যের জন্য শিপিং চার্জ যোগ হবে না
+                </p>
               </div>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2">

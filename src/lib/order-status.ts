@@ -1,5 +1,6 @@
 export const ORDER_STATUSES = [
   "pending",
+  "order_confirm",
   "calling_stage",
   "packaging",
   "courier",
@@ -12,6 +13,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "অপেক্ষমাণ",
+  order_confirm: "অর্ডার কনফার্ম",
   calling_stage: "কলিং স্টেজ",
   packaging: "প্যাকেজিং",
   courier: "কুরিয়ার",
@@ -22,6 +24,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
+  order_confirm: "bg-teal-100 text-teal-800",
   calling_stage: "bg-orange-100 text-orange-800",
   packaging: "bg-blue-100 text-blue-800",
   courier: "bg-purple-100 text-purple-800",
@@ -30,22 +33,14 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   cancel: "bg-red-100 text-red-800",
 };
 
-/** পুরনো ডাটাবেস রেকর্ডের জন্য */
-export const LEGACY_ORDER_STATUS_ALIASES: Record<string, OrderStatus> = {
-  order_confirm: "packaging",
-};
-
 export function normalizeOrderStatus(status: string): string {
-  return LEGACY_ORDER_STATUS_ALIASES[status] ?? status;
+  return status;
 }
 
 export function isValidOrderStatus(status: string): status is OrderStatus {
-  const normalized = normalizeOrderStatus(status);
-  return ORDER_STATUSES.includes(normalized as OrderStatus);
+  return ORDER_STATUSES.includes(status as OrderStatus);
 }
 
 export function statusFilterValues(status: string): string[] {
-  const normalized = normalizeOrderStatus(status);
-  if (normalized === "packaging") return ["packaging", "order_confirm"];
-  return [normalized];
+  return [status];
 }

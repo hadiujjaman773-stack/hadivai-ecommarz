@@ -39,7 +39,7 @@ export function ProductCardActions({
     image: firstVariant?.image || product.images[0] || "",
     variantId: firstVariant?.id,
     variantName: firstVariant?.nameBn,
-    shippingFree: product.shippingFree ?? false,
+    shippingFree: product.shippingFree === true,
     unit: product.unit,
   });
 

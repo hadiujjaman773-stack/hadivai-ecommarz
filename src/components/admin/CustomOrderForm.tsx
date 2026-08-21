@@ -374,13 +374,26 @@ export function CustomOrderForm({
             <p className="font-semibold">৳{subtotal}</p>
           </div>
           <div>
-            <label className="text-gray-500">শিপিং</label>
+            <label className="flex items-center gap-2 text-gray-500 mb-1">
+              <input
+                type="checkbox"
+                checked={Number(form.shipping) === 0}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    shipping: e.target.checked ? 0 : form.shipping || 120,
+                  })
+                }
+              />
+              ফ্রি শিপিং
+            </label>
             <input
               type="number"
               className="input-field mt-1"
+              min={0}
               value={form.shipping}
               onChange={(e) =>
-                setForm({ ...form, shipping: Number(e.target.value) })
+                setForm({ ...form, shipping: Number(e.target.value) || 0 })
               }
             />
           </div>

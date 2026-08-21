@@ -26,6 +26,13 @@ interface CartContextValue {
     variantId?: string
   ) => void;
   clearCart: () => void;
+  syncItemMeta: (
+    updates: Array<{
+      productId: string;
+      shippingFree?: boolean;
+      price?: number;
+    }>
+  ) => void;
   openCart: () => void;
   closeCart: () => void;
   totalItems: number;
@@ -72,6 +79,14 @@ type CartAction =
       variantId?: string;
       quantity: number;
     }
+  | {
+      type: "SYNC_META";
+      updates: Array<{
+        productId: string;
+        shippingFree?: boolean;
+        price?: number;
+      }>;
+    }
   | { type: "CLEAR" };
 
 function addToItems(
@@ -90,7 +105,11 @@ function addToItems(
   if (existing) {
     return items.map((i) =>
       itemKey(i.productId, i.variantId) === key
-        ? { ...i, quantity: i.quantity + quantity }
+        ? {
+            ...i,
+            ...normalized,
+            quantity: i.quantity + quantity,
+          }
         : i
     );
   }
@@ -145,6 +164,23 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case "CLEAR":
       return { ...state, items: [] };
+    case "SYNC_META":
+      return {
+        ...state,
+        items: state.items.map((item) => {
+          const update = action.updates.find(
+            (u) => u.productId === item.productId
+          );
+          if (!update) return item;
+          return {
+            ...item,
+            ...(typeof update.shippingFree === "boolean"
+              ? { shippingFree: update.shippingFree }
+              : {}),
+            ...(typeof update.price === "number" ? { price: update.price } : {}),
+          };
+        }),
+      };
     default:
       return state;
   }
@@ -212,6 +248,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => dispatch({ type: "CLEAR" }), []);
 
+  const syncItemMeta = useCallback(
+    (
+      updates: Array<{
+        productId: string;
+        shippingFree?: boolean;
+        price?: number;
+      }>
+    ) => {
+      if (updates.length === 0) return;
+      dispatch({ type: "SYNC_META", updates });
+    },
+    []
+  );
+
   const totalItems = useMemo(
     () => state.items.reduce((sum, i) => sum + i.quantity, 0),
     [state.items]
@@ -231,6 +281,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      syncItemMeta,
       openCart,
       closeCart,
       totalItems,
@@ -244,6 +295,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      syncItemMeta,
       openCart,
       closeCart,
       totalItems,

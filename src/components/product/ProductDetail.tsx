@@ -117,7 +117,7 @@ export function ProductDetail({ product }: { product: ProductWithCategory }) {
         image: selectedVariant?.image || product.images[0] || "",
         variantId: selectedVariant?.id,
         variantName: selectedVariant?.nameBn,
-        shippingFree: product.shippingFree ?? false,
+        shippingFree: product.shippingFree === true,
         unit: product.unit,
       },
       quantity,

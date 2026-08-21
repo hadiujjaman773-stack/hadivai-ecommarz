@@ -19,13 +19,53 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { fullName, email, phone, address, city, district, note, items, subtotal, shipping, total } = body;
+    const {
+      fullName,
+      email,
+      phone,
+      address,
+      city,
+      district,
+      note,
+      items,
+      subtotal,
+      shipping,
+      total,
+    } = body;
 
     if (!fullName || !phone || !address || !city || !items?.length) {
       return NextResponse.json(
         { error: "প্রয়োজনীয় তথ্য পূরণ করুন" },
         { status: 400 }
       );
+    }
+
+    const productIds = Array.from(
+      new Set(
+        (items as Array<{ productId?: string }>)
+          .map((item) => item.productId)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
+
+    let finalShipping = Number(shipping) || 0;
+    let finalTotal = Number(total) || Number(subtotal) + finalShipping;
+
+    if (productIds.length > 0) {
+      const products = await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, shippingFree: true },
+      });
+      const byId = new Map(products.map((p) => [p.id, p]));
+      const knownIds = productIds.filter((id) => byId.has(id));
+      const allFree =
+        knownIds.length > 0 &&
+        knownIds.every((id) => byId.get(id)?.shippingFree === true);
+
+      if (allFree) {
+        finalShipping = 0;
+        finalTotal = Number(subtotal) || 0;
+      }
     }
 
     const order = await createOrder({
@@ -37,9 +77,9 @@ export async function POST(request: Request) {
       district,
       note,
       items,
-      subtotal,
-      shipping: shipping ?? 120,
-      total,
+      subtotal: Number(subtotal) || 0,
+      shipping: finalShipping,
+      total: finalTotal,
       clientIp: clientIp || undefined,
     });
 

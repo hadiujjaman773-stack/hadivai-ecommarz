@@ -19,8 +19,16 @@ interface ShippingOption {
 }
 
 export function CheckoutForm() {
-  const { items, subtotal, totalItems, updateQuantity, removeItem, clearCart } =
-    useCart();
+  const {
+    items,
+    subtotal,
+    totalItems,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    syncItemMeta,
+    hydrated,
+  } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,8 +39,52 @@ export function CheckoutForm() {
   const [showHelp, setShowHelp] = useState(false);
   const checkoutTracked = useRef(false);
 
+  // Live product flags win over stale localStorage cart values.
+  const productIdsKey = items.map((item) => item.productId).join(",");
+  useEffect(() => {
+    if (!hydrated || items.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) return;
+        const products = (await res.json()) as Array<{
+          id: string;
+          shippingFree?: boolean;
+          price?: number;
+        }>;
+        if (cancelled || !Array.isArray(products)) return;
+
+        const byId = new Map(products.map((p) => [p.id, p]));
+        const updates = items
+          .map((item) => {
+            const live = byId.get(item.productId);
+            if (!live) return null;
+            if (item.shippingFree === (live.shippingFree === true)) return null;
+            return {
+              productId: item.productId,
+              shippingFree: live.shippingFree === true,
+            };
+          })
+          .filter(Boolean) as Array<{
+          productId: string;
+          shippingFree: boolean;
+        }>;
+
+        if (updates.length > 0) syncItemMeta(updates);
+      } catch {
+        // Keep cart values if product sync fails.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, productIdsKey, syncItemMeta, items]);
+
   const needsShipping = useMemo(
-    () => items.some((item) => !item.shippingFree),
+    () => items.some((item) => item.shippingFree !== true),
     [items]
   );
 
